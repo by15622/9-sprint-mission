@@ -2,41 +2,37 @@ package service.jcf;
 
 import entity.User;
 import service.UserService;
-
 import java.util.ArrayList;
 import java.util.List;
 
 public class JCFUserService implements UserService {
-    private final List<User> data;
-
-    public JCFUserService(){
-        this.data = new ArrayList<>();
-    }    //boolean flog "data.add(user) {
-         //if(flag){  ~~
-
+    private final List<User> data = new ArrayList<>();
 
     @Override
-    public User addUser() {
-        return null;
+    public boolean addUser(User user) {
+        return data.add(user);
     }
 
     @Override
-    public User getUser(String displayName) {
-        return null;
+    public User findById(String id) {
+        return data.stream()
+                .filter(user -> user.getId().equals(id))
+                .findFirst()
+                .orElse(null);
     }
 
     @Override
-    public List<User> getAllUser() {
-        return List.of();
+    public List<User> findAll() {
+        return new ArrayList<>(data);
     }
 
     @Override
-    public User updateUser(String name, String email, String phoneNumber) {
-        return null;
+    public boolean updateUser(User user) {
+        return true;
     }
 
     @Override
-    public boolean deleteUser(String displayName) {
-        return false;
+    public boolean withdraw(String id) {
+        return data.removeIf(user -> user.getId().equals(id));
     }
 }
