@@ -16,7 +16,7 @@ public class JCFUserService implements UserService {
     @Override
     public User findById(String id) {
         return data.stream()
-                .filter(user -> user.getId().equals(id))
+                .filter(user -> user.getId().toString().equals(id))
                 .findFirst()
                 .orElse(null);
     }
@@ -33,6 +33,7 @@ public class JCFUserService implements UserService {
 
     @Override
     public boolean withdraw(String id) {
-        return data.removeIf(user -> user.getId().equals(id));
+        return data.removeIf(user -> user.getId().toString().equals(id));
     }
+
 }

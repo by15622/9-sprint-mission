@@ -48,5 +48,9 @@ public class User {
         return updatedAt;
     }
 
+    public String toString() {
+        return "User [이름=" + displayname + ", 이메일=" + email + ", 전화번호=" + phoneNumber + "]";
+    }
+
     //TODO 메서드 추가
 }
