@@ -26,6 +26,7 @@ public class JavaApplication {
             int number = scanner.nextInt();
 
 
+
             if (number == 1) {
 
                 System.out.print("이름을 입력하세요 : ");
@@ -38,15 +39,13 @@ public class JavaApplication {
                 String phoneNumber = scanner.next();
 
                 User user = new User(name, email, phoneNumber);
+                User user2 = new User("서현하", "hh15963@naver.com", "010-2222-2222");
                 boolean addResult = userService.addUser(user);
                 System.out.println("1. 등록 결과 : " + addResult);
 
             }else if (number == 0) break;
 
         }
-
-
-
 
         User findUser = userService.findById(user.getId().toString());
         System.out.println("2. 단건 조회 : " + findUser);
