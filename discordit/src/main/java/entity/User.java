@@ -2,6 +2,12 @@ package entity;
 
 import java.util.UUID;
 
+/* User객체에 들어갈 정보를 private변수 선언을 한다
+public User 입력값(매개변수)을 입력한다
+유저객체의 변수에 입력변수(매개변수)의 값을 입력한다
+UUID부터 메서드들은 리턴값을 반환한다
+ */
+
 public class User {
     private UUID id;
     private String displayName;

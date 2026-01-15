@@ -1,5 +1,7 @@
 package service;
 
+//interface 뼈대
+
 import entity.Channel; // 아까 만든 Channel 클래스 가져오기
 import java.util.List;
 import java.util.UUID;
@@ -7,8 +9,13 @@ import java.util.UUID;
 public interface ChannelService {
 
     Channel create(String displayName);
+
     Channel find(UUID id);
+
     List<Channel> findAll();
+
     Channel update(UUID id, String displayName);
+
     boolean delete(UUID id);
+
 }

@@ -1,5 +1,5 @@
 package service;
-
+//interface 뼈대
 import entity.User;
 import java.util.List;
 
@@ -9,7 +9,7 @@ public interface UserService {
 
     List<User> findAll();
 
-    boolean update(String before, String after);
+    void update(String before, String after);
 
     boolean delete(String id);
 
@@ -17,6 +17,6 @@ public interface UserService {
 }
 
 
-/* UserService에는 addUser(User user) 사용자추가 fimdById(String id) 아이디로 사용자를 찾는기능
-findALL()등록된 모든 사용자 목록을 보여주는 메뉴 updateUser(User User) 기존 정보를 수정하는기능
+/* UserService라는  interface안에 메서드 빈상자를 만들고 상자의 이름이랑 입력값만 지정해둔 상태고
+이 빈상자를 가지고 JCFUserService로 들고간다
  */
