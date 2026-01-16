@@ -3,6 +3,7 @@ import entity.User;
 import service.ChannelService;
 import service.UserService;
 import service.jcf.JCFChannelService;
+import service.jcf.JCFUserService;
 import service.jcf.JCFUserService2;
 import entity.Message;
 import service.MessageService;
@@ -54,7 +55,7 @@ public class JavaApplication {
         }// 수정
         String before = "서현하";   //8수정전이름
         String after = "박춘자";    //수정후이름
-        userService.update(before, after); // 수정할 유저의 이름이랑 새이름 값을 넣어줌
+//        userService.update(before, after); // 수정할 유저의 이름이랑 새이름 값을 넣어줌
         System.out.println();
 
 
@@ -156,13 +157,27 @@ public class JavaApplication {
 
     public static void main(String[] args) {
         // 서비스 초기화
-        UserService userService = new JCFUserService2();
+        UserService userService = new JCFUserService();
         ChannelService channelService = new JCFChannelService();
         MessageService messageService = new JCFMessageService();
 
-        // 테스트
-        userCRUDTest(userService);
-        channelCRUDTest(channelService);
-        messageCRUDTest(messageService);
+        String displayName = "나";
+        String email = "ai@co.kr";
+        String phoneNumber = "010-3333-3333";
+
+        User user = userService.create(displayName,email,phoneNumber);
+        System.out.println(user);
+        String email2 = "bi@co.kr";
+        String phoneNumber2 = "010-4444-4444";
+
+        userService.update(displayName,email2,phoneNumber2);
+        System.out.println(user);
+
+
+
+//         테스트
+//        userCRUDTest(userService);
+//        channelCRUDTest(channelService);
+//        messageCRUDTest(messageService);
     }
 }

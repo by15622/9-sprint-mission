@@ -5,10 +5,10 @@ import service.UserService;
 import java.util.ArrayList;
 import java.util.List;
 
-public class JCFUserService2 implements UserService {
+public class JCFUserService2 {
     private final List<User> data = new ArrayList<>();
 
-    @Override
+
     public User create(String displayName, String email, String phoneNumber) {
         //try안에 있는 오류를 catch가 잡음
         try {
@@ -31,7 +31,7 @@ public class JCFUserService2 implements UserService {
 
 
 
-    @Override
+
     public User find(String id) {
         return data.stream()
                 .filter(user -> user.getId().toString().equals(id))
@@ -42,7 +42,7 @@ public class JCFUserService2 implements UserService {
     유저객체를 반환한다. 이 조건에 맞는 user가 없으면 null을 반환한다
     */
 
-    @Override
+
     public List<User> findAll() {return new ArrayList<>(data);
     }
     // 6 user객체가 담겨진 data list를 반환한다
@@ -53,7 +53,7 @@ public class JCFUserService2 implements UserService {
     /* 9 update 메서드에 수정할 유저의 이름과 새이름을 매개변수로 입력받는다
     그리고 모든 유저정보가 들어있는 data list를 for문 안에서 돌린다
      */
-    @Override
+
     public void update(String before, String after) {
         for (int i = 0; i < data.size(); i++) {
 
@@ -71,7 +71,7 @@ public class JCFUserService2 implements UserService {
         }
     }
 
-    @Override
+
     public boolean delete(String id) {
         return data.removeIf(user -> user.getId().toString().equals(id));
     } //14 모든 유저객체가 담겨있는 data list의 user객체중 매개변수로 입력받은 id값을 가진

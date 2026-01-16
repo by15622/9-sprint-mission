@@ -25,9 +25,11 @@ public class User {
         this.createdAt = now;
         this.updatedAt = now;
     }
-    public void update(String displayName, String email) {
+    public void update(String displayName, String email, String phoneNumber) {
         this.displayName = displayName;
         this.email = email;
+        this.phoneNumber = phoneNumber;
+        this.updatedAt = System.currentTimeMillis();
     }
 
     public UUID getId() {

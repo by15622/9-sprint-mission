@@ -9,7 +9,7 @@ public interface UserService {
 
     List<User> findAll();
 
-    void update(String before, String after);
+    void update(String displayName, String email, String phoneNumber);
 
     boolean delete(String id);
 
