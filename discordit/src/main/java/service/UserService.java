@@ -1,17 +1,18 @@
 package service;
-//interface 뼈대
+
 import entity.User;
 import java.util.List;
+import java.util.UUID;
 
 public interface UserService {
 
-    User find(String id);
+    User find(UUID id);
 
     List<User> findAll();
 
-    void update(String displayName, String email, String phoneNumber);
+    void update(UUID id,String displayName, String email, String phoneNumber);
 
-    boolean delete(String id);
+    boolean delete(UUID id);
 
     User create(String displayName, String email, String phoneNumber);
 }

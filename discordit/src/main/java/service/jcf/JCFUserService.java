@@ -5,6 +5,7 @@ import service.UserService;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 //구현체 생성
 public class JCFUserService implements UserService {
@@ -20,48 +21,51 @@ public class JCFUserService implements UserService {
         try {
             User user = new User(displayName, email, phoneNumber);
             data.add(user);
-            System.out.println("유저 등록 성공");
+            System.out.println("유저 등록 성공 : " + displayName);
             return user;
 
         } catch (Exception e) {
-            System.out.println("유저 등록 실패");
+            System.out.println("유저 등록 실패 : " );
             return null;
         }
         // 리스트에 넣는도중 메모리가 찼거나 예상못한 에러가 나타날 수 있기때문에 try catch를 사용함(보호,위험대비)
 
     }
-    // : 오른쪽꺼 하나씩 꺼내기, get가져오다 set설정하다
-    // find(Long id)로 할때 받아온 글자를 숫자로 바꾸는 과정을 거쳐야하는데
-    //이때 숫자가 아닌 문자가 들어오면 프로그램이 멈출 수 있음 안전하게받고 내부처리
-    //
+    // get가져오다 set설정하다
+    // *for문 User 객체를 담고있는 data 리스트를 가져와서 하나하나 for문으로 꺼내서 User타입의 user안에 넣는다
+    // 만약에 해당 user의 id값과 매개변수인 id값이 같을때 해당 user를 반환한다
+    // 해당유저가 없을시 null(값이 없음) 반환한다
     @Override
-    public User find(String id) {
+    public User find(UUID id) {
         for(User user : data) {
-            if (user.getId().toString().equals(id)){
+            if (user.getId() == id){
                 return user;
             }
         }
-              return null;
+                return null;
     }
 
-   //findAll -> 모든 데이터를 통째로 보여줌
-   //return data(원본) new ArrayList<>(data)(복사본) 원본을 보호해야한다는 생각으로
+   //위에서 선언한 데이터 리스트를 반환한다
     @Override
     public List<User> findAll() {return new ArrayList<>(data);}
 
-    //바꿀려는 대상먼저before
+    //JavaApplication수정한 내용들이 update에 매개변수로 들어간다
     @Override
-    public void update(String displayName, String email, String phoneNumber) {
+    public void update(UUID id,String displayName, String email, String phoneNumber) {
          for (User user : data) {
-             if (user.getDisplayName().equals(displayName)) {
+             if (user.getId() == id) {
                  user.update(displayName, email, phoneNumber);
+                 //user.update는 Class User에 있는 update 메소드를 호출함
              }
          }
      }
+     //데이터를 삭제할건데 조건에 맞으면
+    //데이터안에 있는 유저객체들을 user로 선언을 하고 매개변수로 받은 id가 데이터안에있는 해당유저의 아이디와 같을시 삭제한다.
+    //삭제여부를 bool안에 저장한다
+     public boolean delete(UUID id) {
+        boolean bool = data.removeIf(user -> id == user.getId());
 
-     public boolean delete(String id) {
-         return true;
-
+        return bool;
     }
 }
 

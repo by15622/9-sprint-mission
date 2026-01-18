@@ -25,6 +25,7 @@ public class User {
         this.createdAt = now;
         this.updatedAt = now;
     }
+    //
     public void update(String displayName, String email, String phoneNumber) {
         this.displayName = displayName;
         this.email = email;

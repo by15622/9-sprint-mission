@@ -11,25 +11,35 @@ public class JCFChannelService implements ChannelService {
 
     @Override
     public Channel create(String displayName) {
-        Channel channel = new Channel(displayName);
-        channels.add(channel);
-        return channel;
 
-        //channels 리스트에 새로만든 신규 채널을 담아둠
+        try {
+            Channel channel = new Channel(displayName);
+            channels.add(channel);
+            System.out.println("채널 등록 성공 : " + displayName);
+
+            return channel;
+
+        } catch (Exception e) {
+            System.out.println("채널 등록 실패");
+            return null;
+
+        }
+
     }
+
 
     @Override
     public Channel find(UUID id) {
-        return channels.stream()
-                .filter(channel -> channel.getId().equals(id))
-                .findFirst()
-                .orElse(null);
+        for (Channel channel : channels) {
+            if (channel.getId() == id){
+                return channel;
+            }
+        }
+                 return null;
     }
 
     @Override
-    public List<Channel> findAll() {
-        return new ArrayList<>(channels);
-    }
+    public List<Channel> findAll() {return new ArrayList<>(channels);}
     /* ArrayList쓴 이유 외부에서 함부로 건드리지 못하게 보호하고  외부 리스트 항목을 추가하거나 삭제해도
     관리하는 원본 list에 영향을 주지 않을려고 했다
     findall메서드의
@@ -48,6 +58,7 @@ public class JCFChannelService implements ChannelService {
 
     @Override
     public boolean delete(UUID id) {
-        return channels.removeIf(channel -> channel.getId().equals(id));
+        boolean bool = channels.removeIf(channel -> id == channel.getId());
+        return bool;
     }
 }
