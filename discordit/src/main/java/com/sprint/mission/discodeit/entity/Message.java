@@ -21,6 +21,7 @@ public class Message implements Serializable {
 
 
     public UUID getId() { return id; }
+
     public String getContent() { return content; }
 
     public void setContent(String content) {

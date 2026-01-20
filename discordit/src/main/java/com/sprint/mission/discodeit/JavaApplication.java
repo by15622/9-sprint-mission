@@ -1,9 +1,15 @@
 package com.sprint.mission.discodeit;
 
 import com.sprint.mission.discodeit.entity.Channel;
+import com.sprint.mission.discodeit.entity.ChannelType;
 import com.sprint.mission.discodeit.entity.User;
+import com.sprint.mission.discodeit.repository.ChannelRepository;
+import com.sprint.mission.discodeit.repository.UserRepository;
+import com.sprint.mission.discodeit.repository.file.FileChannelRepository;
+import com.sprint.mission.discodeit.repository.file.FileUserRepository;
 import com.sprint.mission.discodeit.service.ChannelService;
 import com.sprint.mission.discodeit.service.UserService;
+import com.sprint.mission.discodeit.service.basic.BasicMessageService;
 import com.sprint.mission.discodeit.service.file.FileUserService;
 import com.sprint.mission.discodeit.service.jcf.JCFChannelService;
 import com.sprint.mission.discodeit.entity.Message;
@@ -11,7 +17,10 @@ import com.sprint.mission.discodeit.service.MessageService;
 import com.sprint.mission.discodeit.service.jcf.JCFMessageService;
 
 import java.util.List;
+import java.util.NoSuchElementException;
 import java.util.UUID;
+
+import static com.sprint.mission.discodeit.entity.ChannelType.PUBLIC;
 
 
 public class JavaApplication {
@@ -90,8 +99,8 @@ public class JavaApplication {
         */
         System.out.println("-- 채널 생성 테스트 --");
         System.out.println();
-        Channel channel = channelService.create("주의사항");
-        Channel channel2 = channelService.create("자유 게시판");
+        Channel channel = channelService.create("주의사항",PUBLIC);
+        Channel channel2 = channelService.create("자유 게시판",PUBLIC);
         System.out.println();
 
 
@@ -132,9 +141,7 @@ public class JavaApplication {
             System.out.println();
             System.out.println("---------------------------");
             System.out.println();
-
         }
-
     }
 
     static void messageCRUDTest(MessageService messageService) {
@@ -145,45 +152,72 @@ public class JavaApplication {
         System.out.println("메시지 생성: " + message.getId());
         // 조회
         Message foundMessage = messageService.find(message.getId());
-        System.out.println("메시지 조회(단건): " + foundMessage.getId());
+        System.out.println("메시지 조회(단건)\n메세지 아이디 : " + foundMessage.getId()+ "\n메세지 내용 : " + foundMessage.getContent() +"\n");
         List<Message> foundMessages = messageService.findAll();
         System.out.println("메시지 조회(다건): " + foundMessages.size());
+        for(int i = 0; i < foundMessages.size(); i++) {
+            System.out.println("메세지 내용 : " + foundMessages.get(i).getContent());
+        }
         // 수정
         Message updatedMessage = messageService.update(message.getId(), "정말 힘들었습니다.");
-        System.out.println("메시지 수정: " + updatedMessage.getContent());
+        System.out.println("메시지 수정 : " + updatedMessage.getContent());
         // 삭제
         messageService.delete(message.getId());
         List<Message> foundMessagesAfterDelete = messageService.findAll();
-        System.out.println("메시지 삭제: " + foundMessagesAfterDelete.size());
+        System.out.println("메시지 삭제 : " + foundMessagesAfterDelete.size());
+    }
+
+    static User setupUser(UserService userService) {
+        User user = userService.create("woody", "woody@codeit.com", "woody1234");
+        return user;
+    }
+
+    static Channel setupChannel(ChannelService channelService) {
+        Channel channel = channelService.create("공지",ChannelType.PUBLIC);
+        return channel;
+    }
+
+    static void messageCreateTest(MessageService messageService, Channel channel, User author) {
+        Message message = messageService.create("안녕하세요.", channel.getId(), author.getId());
+        System.out.println("메시지 생성: " + message.getId());
     }
 
     public static void main(String[] args) {
+
         // 서비스 초기화
         UserService userService = new FileUserService();
         ChannelService channelService = new JCFChannelService();
         MessageService messageService = new JCFMessageService();
-
-//        String displayName = "나";
-//        String email = "ai@co.kr";
-//        String phoneNumber = "010-3333-3333";
-//
-//        User user = userService.create(displayName,email,phoneNumber);
-//        System.out.println(user);
-//        String email2 = "bi@co.kr";
-//        String phoneNumber2 = "010-4444-4444";
-//
-//        userService.update(displayName,email2,phoneNumber2);
-//        System.out.println(user);
+        ChannelRepository channelRepository = new FileChannelRepository();
+        UserRepository userRepository = new FileUserRepository();
+        MessageService messageService2 = new BasicMessageService(userRepository,channelRepository);
 
         //테스트
         userCRUDTest(userService);
         channelCRUDTest(channelService);
         messageCRUDTest(messageService);
+        System.out.println();
+
+
+        try {
+            User user = userRepository.save(new User("woody", "woody@codeit.com", "1234"));
+            Channel channel = channelRepository.save(new Channel("공지",PUBLIC));
+
+            messageService.create("안녕하세요!", channel.getId(), user.getId());
+            System.out.println("메시지 생성 성공!");
+
+            UUID fakeId = UUID.randomUUID();
+            messageService.create("가짜 유저의 메시지", channel.getId(), fakeId);
+
+        } catch (NoSuchElementException e) {
+            System.out.println("검증 실패 (정상): " + e.getMessage());
+        }
 
         // 셋업
-//        User user = setupUser(userService);
-//        Channel channel = setupChannel(channelService);
-//        // 테스트
-//        messageCreateTest(messageService, channel, user);
+        User user = setupUser(userService);
+        Channel channel = setupChannel(channelService);
+        // 테스트
+        messageCreateTest(messageService, channel, user);
     }
 }
+

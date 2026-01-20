@@ -1,6 +1,7 @@
 package com.sprint.mission.discodeit.service.jcf;
 
 import com.sprint.mission.discodeit.entity.Channel;
+import com.sprint.mission.discodeit.entity.ChannelType;
 import com.sprint.mission.discodeit.service.ChannelService;
 import java.util.ArrayList;
 import java.util.List;
@@ -10,10 +11,10 @@ public class JCFChannelService implements ChannelService {
     private final List<Channel> channels = new ArrayList<>();
 
     @Override
-    public Channel create(String displayName) {
+    public Channel create(String displayName,ChannelType type) {
 
         try {
-            Channel channel = new Channel(displayName);
+            Channel channel = new Channel(displayName,type);
             channels.add(channel);
             System.out.println("채널 등록 성공 : " + displayName);
 

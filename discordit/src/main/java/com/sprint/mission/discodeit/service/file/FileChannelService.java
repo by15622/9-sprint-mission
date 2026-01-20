@@ -1,6 +1,7 @@
 package com.sprint.mission.discodeit.service.file;
 
 import com.sprint.mission.discodeit.entity.Channel;
+import com.sprint.mission.discodeit.entity.ChannelType;
 import com.sprint.mission.discodeit.service.ChannelService;
 
 import java.io.*;
@@ -30,8 +31,8 @@ public class FileChannelService implements ChannelService {
     private Path resolvePath(UUID id) { return DIRECTORY.resolve(id + EXTENSION); }
 
     @Override
-    public Channel create(String displayName) {
-        Channel channel = new Channel(displayName);
+    public Channel create(String displayName,ChannelType type) {
+        Channel channel = new Channel(displayName,type);
         Path path = resolvePath(channel.getId());
         try (
                 FileOutputStream fos = new FileOutputStream(path.toFile());
