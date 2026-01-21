@@ -25,9 +25,7 @@ public class JCFChannelService implements ChannelService {
             return null;
 
         }
-
     }
-
 
     @Override
     public Channel find(UUID id) {

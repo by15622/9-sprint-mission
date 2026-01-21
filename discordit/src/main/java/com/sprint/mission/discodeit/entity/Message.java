@@ -19,6 +19,7 @@ public class Message implements Serializable {
         this.authorId = authorId;
     }
 
+    public void update(String content) { this.content = content; }
 
     public UUID getId() { return id; }
 

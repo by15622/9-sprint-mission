@@ -1,27 +1,23 @@
-package com.sprint.mission.discodeit.repository.file;
+package com.sprint.mission.discodeit.service.file;
 
 import com.sprint.mission.discodeit.entity.Message;
 import com.sprint.mission.discodeit.repository.MessageRepository;
 
 import java.io.*;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 
 public class FileMessageRepository implements MessageRepository {
     private final String fileName = "messages.dat";
 
     @Override
     public Message save(Message message) {
-        List<Message> messages = new ArrayList<>(findAll());
+        List<Message> messages = findAll();
         messages.removeIf(m -> m.getId().equals(message.getId()));
         messages.add(message);
 
         saveAllToFile(messages);
         return message;
     }
-
 
     @Override
     public Optional<Message> findById(UUID id) {
@@ -31,6 +27,7 @@ public class FileMessageRepository implements MessageRepository {
     }
 
     @Override
+    @SuppressWarnings("unchecked")
     public List<Message> findAll() {
         File file = new File(fileName);
         if (!file.exists()) return new ArrayList<>();
@@ -42,15 +39,13 @@ public class FileMessageRepository implements MessageRepository {
         }
     }
 
-
     @Override
     public boolean existsById(UUID id) {return findById(id).isPresent();}
 
-
     @Override
     public void deleteById(UUID id) {
-        List<Message> messages = new ArrayList<>(findAll());
-        if (messages.removeIf(m -> m.getId().equals(id))) {
+        List<Message> messages = findAll();
+        if (messages.removeIf(message -> message.getId().equals(id))) {
             saveAllToFile(messages);
         }
     }
