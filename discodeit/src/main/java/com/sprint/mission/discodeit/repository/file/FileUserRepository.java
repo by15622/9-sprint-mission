@@ -98,4 +98,10 @@ public class FileUserRepository implements UserRepository {
             throw new RuntimeException(e);
         }
     }
+    @Override
+    public Optional<User> findByUsername(String username) {
+        return findAll().stream()
+                .filter(user -> user.getUsername().equals(username))
+                .findFirst();
+    }
 }
