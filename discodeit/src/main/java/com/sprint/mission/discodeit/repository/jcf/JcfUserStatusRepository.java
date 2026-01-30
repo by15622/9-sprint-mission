@@ -15,12 +15,27 @@ public class JcfUserStatusRepository implements UserStatusRepository {
 
     @Override
     public Optional<UserStatus> findByUserId(UUID userId) {
-
-        return Optional.empty();
+        return userStatuses.stream()
+                .filter(status -> status.getUserId().equals(userId))
+                .findFirst();
     }
+
     @Override
     public UserStatus save(UserStatus userStatus) {
+        userStatuses.add(userStatus);
         return userStatus;
+    }
+
+    @Override
+    public Optional<UserStatus> findById(String id) {
+        return userStatuses.stream()
+                .filter(status -> status.getId().equals(id))
+                .findFirst();
+    }
+
+    @Override
+    public List<UserStatus> findAll() {
+        return new ArrayList<>(userStatuses);
     }
 
     @Override
