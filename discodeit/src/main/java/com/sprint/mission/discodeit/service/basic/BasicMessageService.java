@@ -32,7 +32,6 @@ public class BasicMessageService implements MessageService {
         if (!userRepository.existsById(request.authorId())) {
             throw new NoSuchElementException("Author not found");
         }
-
         Message message = new Message(
                 request.content(),
                 request.channelId(),

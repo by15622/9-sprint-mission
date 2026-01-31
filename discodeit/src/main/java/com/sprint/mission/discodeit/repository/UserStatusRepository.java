@@ -12,6 +12,6 @@ public interface UserStatusRepository {
     UserStatus save(UserStatus userStatus);
     void deleteByUserId(UUID userId);
     boolean existsByUserId(UUID userId);
-    Optional<UserStatus> findById(String id);
+    Optional<UserStatus> findById(UUID id);
     List<UserStatus> findAll();
 }

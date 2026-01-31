@@ -10,7 +10,6 @@ public class ReadStatus {
     private final UUID id;
     private final Instant createdAt;
     private Instant updatedAt;
-
     private UUID userId;
     private UUID channelId;
     private UUID lastReadMessageId;

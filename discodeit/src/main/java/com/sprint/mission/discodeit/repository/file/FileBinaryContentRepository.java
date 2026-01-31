@@ -24,6 +24,7 @@ public class FileBinaryContentRepository implements BinaryContentRepository {
         return Optional.ofNullable(data.get(id));
     }
 
+
     @Override
     public Optional<BinaryContent> findByUserId(UUID userId) {
         return data.values().stream()

@@ -3,6 +3,7 @@ package com.sprint.mission.discodeit.entity;
 import lombok.Getter;
 
 import java.time.Instant;
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Getter
@@ -26,16 +27,14 @@ public class UserStatus {
         this.createdAt = Instant.now();
         this.updatedAt = Instant.now();
         this.userId = userId;
-        this.type = "OFFLINE";
+        this.type = "OFFLINE";           //유저 상태구별
     }
-    public String getId() {
-        return this.id.toString();
-    }
+
     public void update(String type) {
         this.type = type;
         this.updatedAt = Instant.now();
     }
-    // 5분 이내 접속 여부 확인 메서드
+
     public boolean isOnline() {
         return updatedAt != null && updatedAt.isAfter(Instant.now().minusSeconds(300));
     }

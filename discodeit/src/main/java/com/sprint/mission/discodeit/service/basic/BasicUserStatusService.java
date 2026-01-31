@@ -10,13 +10,13 @@ import com.sprint.mission.discodeit.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
 public class BasicUserStatusService implements UserStatusService {
-
     private final UserStatusRepository userStatusRepository;
     private final UserRepository userRepository;
 
@@ -31,14 +31,18 @@ public class BasicUserStatusService implements UserStatusService {
         UserStatus userStatus = new UserStatus(request.userId(), request.type());
         UserStatus savedStatus = userStatusRepository.save(userStatus);
 
-        return savedStatus.getId();
+        return savedStatus.getId().toString();
     }
 
     @Override
-    public UserStatusResponse find(String id) {
+    public UserStatusResponse find(UUID id) {
         UserStatus userStatus = userStatusRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("해당 상태 정보를 찾을 수 없습니다."));
-
+                .orElseThrow(() -> new RuntimeException("해당 유저를 찾을 수 없습니다."));
+        if (userStatus.isOnline()) {
+            System.out.println("[상태 확인] ID: " + id + " -> 현재 접속 중인 유저입니다.");
+        } else {
+            System.out.println("[상태 확인] ID: " + id + " -> 미접속 유저입니다.");
+        }
         return new UserStatusResponse(userStatus);
     }
 
@@ -50,20 +54,21 @@ public class BasicUserStatusService implements UserStatusService {
     }
 
     @Override
-    public void update(String id, UserStatusUpdateRequest request) {
+    public void update(UUID id, UserStatusUpdateRequest request) {
     }
 
     @Override
-    public void updateByUserId(String userId, UserStatusUpdateRequest request) {
-        UserStatus userStatus = userStatusRepository.findByUserId(UUID.fromString(userId))
+    public void updateByUserId(UUID userId, UserStatusUpdateRequest request) {
+        UserStatus userStatus = userStatusRepository.findByUserId((userId))  // 문자열로부터
                 .orElseThrow(() -> new RuntimeException("해당 유저의 상태 정보를 찾을 수 없습니다."));
         userStatus.update(request.type());
         userStatusRepository.save(userStatus);
     }
 
     @Override
-    public void delete(String id) {
-        userStatusRepository.deleteByUserId(UUID.fromString(id));
+    public void delete(UUID id) {
+        System.out.println("삭제 요청 들어옴! ID: " + id);
+        userStatusRepository.deleteByUserId((id));
+        System.out.println("삭제 완료!");
     }
-
 }

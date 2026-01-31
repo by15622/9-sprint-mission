@@ -28,12 +28,12 @@ public class JcfReadStatusRepository implements ReadStatusRepository {
                 .toList();
     }
 
-    @Override
-    public boolean existsByUserIdAndChannelId(UUID userId, UUID channelId) {
-        return database.values().stream()
-                .anyMatch(status -> status.getUserId().equals(userId)
-                        && status.getChannelId().equals(channelId));
-    }
+//    @Override
+//    public boolean existsByUserIdAndChannelId(UUID userId, UUID channelId) {
+//        return database.values().stream()
+//                .anyMatch(status -> status.getUserId().equals(userId)
+//                        && status.getChannelId().equals(channelId));
+//    }       메소드 호출하는곳이 없어서 주석처리함
 
     @Override
     public boolean existsById(UUID id) {

@@ -17,8 +17,6 @@ import java.util.UUID;
 @Service
 @RequiredArgsConstructor
 public class BasicReadStatusService implements ReadStatusService {
-
-
     private final ReadStatusRepository readStatusRepository;
     private final UserRepository userRepository;
     private final ChannelRepository channelRepository;
@@ -28,24 +26,19 @@ public class BasicReadStatusService implements ReadStatusService {
 //        if (!userRepository.existsById(request.userId())) {
 //            throw new NoSuchElementException("User not found");
 //        }
-//
 //        if (!channelRepository.existsById(request.channelId())) {
 //            throw new NoSuchElementException("Channel not found");
 //        }
-
         boolean isDuplicate = readStatusRepository.findAllByUserId(request.userId()).stream()
                 .anyMatch(rs -> rs.getChannelId().equals(request.channelId()));
-
         if (isDuplicate) {
             throw new IllegalStateException("이미 이 채널에 대한 유저의 읽음 상태가 존재합니다.");
         }
-
         ReadStatus readStatus = new ReadStatus(
                 request.userId(),
                 request.channelId(),
                 request.lastReadMessageId()
         );
-
         return readStatusRepository.save(readStatus);
     }
 

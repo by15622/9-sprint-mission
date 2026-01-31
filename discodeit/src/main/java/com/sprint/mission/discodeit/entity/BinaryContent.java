@@ -12,7 +12,6 @@ public class BinaryContent {
     private String fileName;
     private String contentType;
     private Long size;
-
     private UUID userId;
     private UUID messageId;
 
@@ -22,6 +21,6 @@ public class BinaryContent {
         this.fileName = fileName;
         this.contentType = contentType;
         this.size = size;
-        this.userId = userId;
+//      this.userId = userId;
     }
 }

@@ -34,7 +34,6 @@ public class Message implements Serializable {
             this.content = newContent;
             anyValueUpdated = true;
         }
-
         if (anyValueUpdated) {
             this.updatedAt = Instant.now();
         }

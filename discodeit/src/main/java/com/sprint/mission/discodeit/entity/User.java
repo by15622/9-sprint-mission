@@ -39,7 +39,6 @@ public class User implements Serializable {
             this.password = newPassword;
             anyValueUpdated = true;
         }
-
         if (anyValueUpdated) {
             this.updatedAt = Instant.now();
         }

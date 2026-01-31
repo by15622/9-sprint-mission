@@ -30,6 +30,7 @@ public class FileUserRepository implements UserRepository {
     private Path resolvePath(UUID id) {
         return DIRECTORY.resolve(id + EXTENSION);
     }
+    // 디렉토리 폴더안에 매개변수로 받은 id.ser 파일을 만든다
 
     @Override
     public User save(User user) {
@@ -49,12 +50,12 @@ public class FileUserRepository implements UserRepository {
     public Optional<User> findById(UUID id) {
         User userNullable = null;
         Path path = resolvePath(id);
-        if (Files.exists(path)) {
+        if (Files.exists(path)) {                   // 그 파일이 있는가?
             try (
-                    FileInputStream fis = new FileInputStream(path.toFile());
+                    FileInputStream fis = new FileInputStream(path.toFile());    //타입을 File로 바꿈
                     ObjectInputStream ois = new ObjectInputStream(fis)
             ) {
-                userNullable = (User) ois.readObject();
+                userNullable = (User) ois.readObject();  //형변환 
             } catch (IOException | ClassNotFoundException e) {
                 throw new RuntimeException(e);
             }
@@ -66,7 +67,7 @@ public class FileUserRepository implements UserRepository {
     public List<User> findAll() {
         try {
             return Files.list(DIRECTORY)
-                    .filter(path -> path.toString().endsWith(EXTENSION))
+                    .filter(path -> path.toString().endsWith(EXTENSION))     //.ser로 끝나는것만 가져오기
                     .map(path -> {
                         try (
                                 FileInputStream fis = new FileInputStream(path.toFile());
@@ -77,7 +78,7 @@ public class FileUserRepository implements UserRepository {
                             throw new RuntimeException(e);
                         }
                     })
-                    .toList();
+                    .toList();     //list로 반환해라
         } catch (IOException e) {
             throw new RuntimeException(e);
         }

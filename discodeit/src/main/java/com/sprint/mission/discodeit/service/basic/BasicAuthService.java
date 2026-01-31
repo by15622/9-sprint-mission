@@ -12,8 +12,6 @@ import java.util.NoSuchElementException;
 @Service
 @RequiredArgsConstructor
 public class BasicAuthService implements AuthService {
-
-    // 유저 정보를 확인하기 위해 UserRepository 창고가 필요합니다.
     private final UserRepository userRepository;
 
     @Override
