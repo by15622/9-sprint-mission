@@ -55,6 +55,11 @@ public class BasicUserStatusService implements UserStatusService {
 
     @Override
     public void update(UUID id, UserStatusUpdateRequest request) {
+        UserStatus userStatus = userStatusRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("해당 유저 상태 정보를 찾을 수 없습니다."));
+        userStatus.update(request.type());
+        userStatusRepository.save(userStatus);
+        System.out.println("업데이트 완료 ID: " + id + "의 상태가 변경되었습니다.");
     }
 
     @Override

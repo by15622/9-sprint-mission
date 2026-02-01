@@ -25,7 +25,6 @@ public class BasicUserService implements UserService {
     public User create(UserCreateRequest request) {
         User user = new User(request.username(), request.email(), request.password());
         User savedUser = userRepository.save(user);
-
         UserStatus status = new UserStatus(savedUser.getId());
         userStatusRepository.save(status);
 
@@ -36,7 +35,6 @@ public class BasicUserService implements UserService {
     public UserStatusResponse find(UUID userId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new NoSuchElementException("User not found"));
-
         UserStatus status = userStatusRepository.findByUserId(userId)
                 .orElseThrow(() -> new NoSuchElementException("User status not found"));
 
@@ -56,13 +54,11 @@ public class BasicUserService implements UserService {
     public User update(UUID userId, UserUpdateRequest request) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new NoSuchElementException("User not found"));
-
         user.update(
                 request.name(),
                 request.email(),
                 request.password()
         );
-
         if (request.profileImageId() != null) {
         }
         return userRepository.save(user);
