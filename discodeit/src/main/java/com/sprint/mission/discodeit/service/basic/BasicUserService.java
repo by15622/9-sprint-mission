@@ -30,7 +30,11 @@ public class BasicUserService implements UserService {
 
         return savedUser;
     }
-
+/* 매개변수로 UserCreateRequest를 받아서 request에 이름,이메일,비밀번호로 새유저를 만들고
+userRepository.save메서드의 매개변수로 user를 넣어서 리턴값으로 반환된 user를 saveduser로 저장한다
+savedUser의 id로 new UserStatus로 만들어서 status로 저장하고 userStatusRepository.save의 메서드 매개변수로
+입력해서 호출한다 return savedUser반환한다
+*/
     @Override
     public UserStatusResponse find(UUID userId) {
         User user = userRepository.findById(userId)
@@ -44,7 +48,11 @@ public class BasicUserService implements UserService {
                 status.getUpdatedAt().toString()
         );
     }
-
+/*매개변수로 userId를 받는다 userRepository.findById메서드에 userId를 매개변수로 입력해서 리턴값으로 반환된 User객체를 user에넣는다
+만약에 반환된 user가 없으면 에러를 던진다 userStatusRepository.findById메서드에 userId를 매개변수로 입력해서 리턴값으로 반환된 UserStatus객체를 status에넣는다
+만약에 반환된 UserStatus가 없으면 에러를 던진다 리턴값으로 new UserStatusResponse객체를 반환한다 UserStatusResponse의 값은 위에서 찾은 user의 이름과
+status의 온라인상태,업데이트 시간이 들어간다
+ */
     @Override
     public List<User> findAll() {
         return userRepository.findAll();
@@ -59,10 +67,12 @@ public class BasicUserService implements UserService {
                 request.email(),
                 request.password()
         );
-        if (request.profileImageId() != null) {
-        }
         return userRepository.save(user);
     }
+/* 매개변수로 userid와 UserUpdateRequest를 받는다  userRepository.findById메서드에 useerid를 매개변수로 입력해서 리턴값으로 반환된 User객체를
+user에 넣는다 반환된 user가 없으면 에러를 던진다. user.update메서드를 통해 request에 담긴 이름,이메일,비밀번호로 변경한다.
+리턴값으로 userRepository.save 메서드의 반환값을 보낸다
+ */
 
     @Override
     public void delete(UUID userId) {
@@ -73,3 +83,7 @@ public class BasicUserService implements UserService {
         userRepository.deleteById(userId);
     }
 }
+/* 배개변수로 userid를 받아서 userRepository.existsById메서드로 userId가 있는지 확인하고 없으면 에러를 던진다
+userStatusRepository.deleteByUserId메서드와
+userRepository.deleteById메서드를 통해서 userStatusRepository와  userRepository값을 삭제한다
+ */

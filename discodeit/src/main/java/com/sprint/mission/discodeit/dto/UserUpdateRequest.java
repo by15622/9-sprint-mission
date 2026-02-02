@@ -8,3 +8,5 @@ public record UserUpdateRequest(
         String password,
         UUID profileImageId
 ) {}
+
+//수절할 새 이름, 메일, 비밀번호, 변경할 새로운 프로필 이미지id

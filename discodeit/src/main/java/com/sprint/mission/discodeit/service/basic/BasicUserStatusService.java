@@ -35,14 +35,10 @@ public class BasicUserStatusService implements UserStatusService {
     }
 
     @Override
-    public UserStatusResponse find(UUID id) {
-        UserStatus userStatus = userStatusRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("해당 유저를 찾을 수 없습니다."));
-        if (userStatus.isOnline()) {
-            System.out.println("[상태 확인] ID: " + id + " -> 현재 접속 중인 유저입니다.");
-        } else {
-            System.out.println("[상태 확인] ID: " + id + " -> 미접속 유저입니다.");
-        }
+    public UserStatusResponse find(UUID userId) {
+        UserStatus userStatus = userStatusRepository.findByUserId(userId)
+                .orElseThrow(() -> new RuntimeException("해당 유저의 상태 정보를 찾을 수 없습니다."));
+
         return new UserStatusResponse(userStatus);
     }
 

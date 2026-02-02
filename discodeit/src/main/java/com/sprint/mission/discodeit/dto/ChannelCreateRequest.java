@@ -8,3 +8,5 @@ public record ChannelCreateRequest(
         String description,
         List<UUID> memberIds
 ) {}
+
+//채널이름, 채널 설명, 채널 유저의 고유ID 리스트
