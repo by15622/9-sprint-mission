@@ -41,7 +41,7 @@ public class BasicMessageService implements MessageService {
         return messageRepository.save(message);
     }
 /* 매개변수로 MessageCreateRequest를 받아서 만약에 request.channelId나 request.authorId가
-userRepository.existsById 메서드로 찾지 못했을때 에러를 반환하고 에러가 없을시 request로 받은 값으로
+userRepository.existsById 메서드로 못찾았을때 에러를 반환하고 에러가 없을시 request로 받은 값으로
 새 메세지를 생성하고 messageRepository.save메서드의 리턴값을 반환한다
  */
     @Override
@@ -51,10 +51,12 @@ userRepository.existsById 메서드로 찾지 못했을때 에러를 반환하�
     }
 //매개변수로 MessageId를 받아서 messageRepository.findById메서드를 호출하고 리턴값으로 반환된
 //반환된 메세지가 있으면 그 메세지를 반환하고 없을시 오류를 생성한다
+
     @Override
     public List<Message> findAllByChannelId(UUID channelId) {
         return messageRepository.findAllByChannelId(channelId);
     }
+//매개변수로 받은 channelId를 사용해 특정 채널의 메시지 목록을 조회한다
 
     @Override
     public Message update(UUID messageId, MessageUpdateRequest request) {

@@ -54,10 +54,14 @@ savedUser의 id로 new UserStatus로 만들어서 status로 저장하고 userSta
 status의 온라인상태,업데이트 시간이 들어간다
  */
     @Override
-    public List<User> findAll() {
-        return userRepository.findAll();
+    public List<UserStatusResponse> findAll() {
+        return userRepository.findAll().stream()
+                .map(user -> find(user.getId()))
+                .toList();
     }
-
+/*  유저에 있는 모든 데이터를 가져와서 스트림 형식으로 바꾸고 .map부분에서 user객체를 하나씩 꺼내고
+ find 메소드를 이용해서 id로 추출한 유저정보를 UserStatusResponse변환하고 리스트 형식으로 만든다
+ */
     @Override
     public User update(UUID userId, UserUpdateRequest request) {
         User user = userRepository.findById(userId)
@@ -83,7 +87,7 @@ user에 넣는다 반환된 user가 없으면 에러를 던진다. user.update�
         userRepository.deleteById(userId);
     }
 }
-/* 배개변수로 userid를 받아서 userRepository.existsById메서드로 userId가 있는지 확인하고 없으면 에러를 던진다
+/* 매개변수로 userid를 받아서 userRepository.existsById메서드로 userId가 있는지 확인하고 없으면 에러를 던진다
 userStatusRepository.deleteByUserId메서드와
 userRepository.deleteById메서드를 통해서 userStatusRepository와  userRepository값을 삭제한다
  */

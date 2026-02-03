@@ -46,11 +46,14 @@ readStatusRepository.save의 리턴값을 반환한다
         return readStatusRepository.findById(id)
                 .orElseThrow(() -> new NoSuchElementException("ReadStatus not found"));
     }
+//매개변수로 id를 받아서 readStatusRepository.findById메서드를 호출하고 리턴값으로 반환된 데이터(ReadStatus)가
+//있으면 그 데이터를 반환하고 없을시 오류를 생성한다
 
     @Override
     public List<ReadStatus> findAllByUserId(UUID userId) {
         return readStatusRepository.findAllByUserId(userId);
     }
+//매개변수로 받은 userId를 사용해 모든 ReadStatus 데이터를 리스트 형태로 조회하여 반환한다
 
     @Override
     public ReadStatus update(UUID id, ReadStatusUpdateRequest request) {
@@ -58,7 +61,10 @@ readStatusRepository.save의 리턴값을 반환한다
         readStatus.update(request.lastReadMessageId());
         return readStatusRepository.save(readStatus);
     }
-
+/* 매개변수로 id와 ReadStatusUpdateRequest를 받아온다 매개변수로 받아온 id를 find 메서드에 넣어서
+데이터를 찾고 변수에 담는다 request에 담긴 마지막으로 읽은 메세지id값을 가져와서 readStatus 정보를 업데이트한다
+ readStatusRepository.save 메서드의 리턴값을 반환한다
+ */
     @Override
     public void delete(UUID id) {
         if (!readStatusRepository.existsById(id)) {
@@ -67,3 +73,6 @@ readStatusRepository.save의 리턴값을 반환한다
         readStatusRepository.deleteById(id);
     }
 }
+/* id를 매개변수로 받아서 readStatusRepository.existsById메서드의 매개변수에 id를 넣어주고 리턴값이
+false일때 오류를 반환한다 아닐시 readStatusRepository.deleteById메서드의 매개변수에 id를 넣어서 호출한다
+ */

@@ -4,6 +4,8 @@ import lombok.Getter;
 
 import java.io.Serializable;
 import java.time.Instant;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 @Getter
@@ -22,6 +24,11 @@ public class Channel implements Serializable {    //객체 직렬화
         this.type = type;
         this.name = name;
         this.description = description;
+    }
+    private List<UUID> members = new ArrayList<>();
+
+    public boolean containsUser(UUID userId) {
+        return this.members.contains(userId);
     }
 
     public void update(String newName, String newDescription) {

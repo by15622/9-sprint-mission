@@ -56,8 +56,8 @@ public class DiscodeitApplication {
 
 
 		System.out.println("\n 메시지 발송 테스트");
-		Message message1 = messageService.create(new MessageCreateRequest("반갑습니다!", channel.getId(), user.getId(), null));
-		Message message2 = messageService.create(new MessageCreateRequest("반가워요", channel.getId(), user.getId(), null));
+		Message message1 = messageService.create(new MessageCreateRequest("안녕하세요~", channel.getId(), user.getId(), null));
+		Message message2 = messageService.create(new MessageCreateRequest("반갑습니다~", channel.getId(), user.getId(), null));
 		System.out.println(" - 메시지 1: " + message1.getContent());
 		System.out.println(" - 메시지 2: " + message2.getContent());
 

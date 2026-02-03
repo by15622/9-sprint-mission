@@ -33,6 +33,10 @@ public class BasicUserStatusService implements UserStatusService {
 
         return savedStatus.getId().toString();
     }
+/* 매개변수로 UserStatusCreateRequest를 받아서 만약에 request.userId가 userRepository.existsById 메서드로 못찾았을때
+에러를 반환한다 userRepository.existbyuserId 메서드에 매개변수로 request.userId를 입력해서 상태정보가 존재하는지 확인하고 이미 존재하면 에러 던진다
+
+ */
 
     @Override
     public UserStatusResponse find(UUID userId) {
@@ -41,13 +45,21 @@ public class BasicUserStatusService implements UserStatusService {
 
         return new UserStatusResponse(userStatus);
     }
-
+/* 매개변수로 userId를 받는다 userStatusRepository.findByUserId 메서드에 userId를 매개변수로 입력해서 반환된 UserStatus객체를
+userStatus에 넣는다 반환된 userStatus가 있으면 그 userStatus를 반환하고 없을시 오류를 생성한다
+userStatus를 UserStatusResponse로 변환하여 리턴값으로 반환한다
+ */
     @Override
     public List<UserStatusResponse> findAll() {
         return userStatusRepository.findAll().stream()
                 .map(UserStatusResponse::new)
                 .toList();
     }
+/*Userstatus에 있는 모든 데이터를 가져와서 스트림 형식으로 바꾸고 .map부분에서 userstatus 객체를 하나씩 꺼내와서
+Userstatusresponse라는 객체로 만들어서 리스트에 담는다
+전부 담은 후 리턴값으로 UserstatusResponse가 담긴 리스트를 반환한다
+.map(status -> new UserStatusResponse(status)) 이거랑 같은의미
+ */
 
     @Override
     public void update(UUID id, UserStatusUpdateRequest request) {
@@ -57,6 +69,12 @@ public class BasicUserStatusService implements UserStatusService {
         userStatusRepository.save(userStatus);
         System.out.println("업데이트 완료 ID: " + id + "의 상태가 변경되었습니다.");
     }
+/* 매개변수로 id와 UserStatusUpdateRequest받아온다
+userStatusRepository의 findById메소드에 id를 넣고 리턴값으로 반환된 객체를 userStatus에 담는다
+반환된 userStatus가 있으면 그 userStatus를 반환하고 없을시 오류를 생성한다
+받아온 타입을 꺼내서 업데이트하고 userStatus에 담는다
+userStatusRepository.save 메서드의 매개변수로 userStatus를 입력한다
+ */
 
     @Override
     public void updateByUserId(UUID userId, UserStatusUpdateRequest request) {
@@ -65,7 +83,12 @@ public class BasicUserStatusService implements UserStatusService {
         userStatus.update(request.type());
         userStatusRepository.save(userStatus);
     }
-
+/* 매개변수로 userId와 UserStatusUpdateRequest를 받아온다
+userStatusRepository의 findByUserId메소드에 userId를 넣고 리턴값으로 반환된 객체를 userStatus에 넣는다
+ 반환된 리턴값이 없을시 오류를 생성한다
+ 받아온 타입을 꺼내서 업데이트하고 userStatus에 담는다
+ userStatusRepository.save 메서드의 매개변수로 userStatus를 입력한다
+ */
     @Override
     public void delete(UUID id) {
         System.out.println("삭제 요청 들어옴! ID: " + id);
@@ -73,3 +96,4 @@ public class BasicUserStatusService implements UserStatusService {
         System.out.println("삭제 완료!");
     }
 }
+//userStatusRepository.deleteByUserId메서드를 통해서 userStatusRepository 값을 삭제한다

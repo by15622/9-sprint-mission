@@ -54,9 +54,13 @@ for문을 돌면서 각 객체의 UUID, savedChannel.getid(),null로 readStatus�
 
     @Override
     public List<Channel> findAllByUserId(UUID userId) {
-        return channelRepository.findAll();
+        return channelRepository.findAll().stream()
+                .filter(channel -> channel.containsUser(userId))
+                .toList();
     }
-//
+/*매개변수로 userId를 받아온다. 매개변수로 받아온 userId로 Chnnel에 있는 모든 데이터를 가져와서 스트림 형식으로 바꾼다
+.filter부분에서 chaanel객체를 하나씩 꺼내서 containsUser메소드를 이용해서 userid로 추출한 정보를 Channel로 변환하고 리스트 형식으로 바꾼다
+*/
 
     @Override
     public Channel update(UUID channelId, ChannelUpdateRequest request) {
