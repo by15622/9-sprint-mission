@@ -24,6 +24,8 @@ import com.sprint.mission.discodeit.service.basic.BasicMessageService;
 import com.sprint.mission.discodeit.service.basic.BasicReadStatusService;
 import com.sprint.mission.discodeit.service.basic.BasicUserService;
 
+import java.util.Optional;
+
 public class JavaApplication2 {
     static User setupUser(UserService userService) {
         UserCreateRequest request = new UserCreateRequest(
@@ -32,7 +34,7 @@ public class JavaApplication2 {
                 "woody1234",
                 null
         );
-        return userService.create(request);
+        return userService.create(request, Optional.empty());
     }
     private static Channel setupChannel(ChannelService channelService) {
         ChannelCreateRequest request = new ChannelCreateRequest(

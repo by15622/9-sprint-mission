@@ -3,6 +3,7 @@ package com.sprint.mission.discodeit.dto;
 import com.sprint.mission.discodeit.entity.UserStatus;
 
 public record UserStatusResponse(
+        String userId,
         String nickname,
         boolean isOnline,
         String lastActive
@@ -10,8 +11,10 @@ public record UserStatusResponse(
     public UserStatusResponse(UserStatus userStatus) {
         this(
                 userStatus.getUserId().toString(),
+                "haha",
                 userStatus.isOnline(),
-                userStatus.getUpdatedAt().toString()
+                userStatus.getUpdatedAt() != null ? userStatus.getUpdatedAt().toString() : "방금 생성됨"
+
         );
     }
 }

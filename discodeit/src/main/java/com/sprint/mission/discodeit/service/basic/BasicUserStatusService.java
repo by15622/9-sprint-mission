@@ -40,15 +40,16 @@ public class BasicUserStatusService implements UserStatusService {
 
     @Override
     public UserStatusResponse find(UUID userId) {
+        // .orElseThrow 대신 .orElseGet을 사용하여 데이터가 없어도 죽지 않게 만듭니다.
         UserStatus userStatus = userStatusRepository.findByUserId(userId)
-                .orElseThrow(() -> new RuntimeException("해당 유저의 상태 정보를 찾을 수 없습니다."));
+                .orElseGet(() -> {
+                    // 상태가 없으면 온라인 상태가 아닌(false) 새 상태 객체를 임시로 생성합니다.
+                    return new UserStatus(userId);
+                });
 
         return new UserStatusResponse(userStatus);
     }
-/* 매개변수로 userId를 받는다 userStatusRepository.findByUserId 메서드에 userId를 매개변수로 입력해서 반환된 UserStatus객체를
-userStatus에 넣는다 반환된 userStatus가 있으면 그 userStatus를 반환하고 없을시 오류를 생성한다
-userStatus를 UserStatusResponse로 변환하여 리턴값으로 반환한다
- */
+
     @Override
     public List<UserStatusResponse> findAll() {
         return userStatusRepository.findAll().stream()

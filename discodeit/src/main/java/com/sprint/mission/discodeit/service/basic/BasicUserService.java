@@ -1,8 +1,6 @@
 package com.sprint.mission.discodeit.service.basic;
 
-import com.sprint.mission.discodeit.dto.UserCreateRequest;
-import com.sprint.mission.discodeit.dto.UserStatusResponse;
-import com.sprint.mission.discodeit.dto.UserUpdateRequest;
+import com.sprint.mission.discodeit.dto.*;
 import com.sprint.mission.discodeit.entity.User;
 import com.sprint.mission.discodeit.entity.UserStatus;
 import com.sprint.mission.discodeit.repository.UserRepository;
@@ -13,6 +11,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.NoSuchElementException;
+import java.util.Optional;
 import java.util.UUID;
 import com.sprint.mission.discodeit.dto.UserCreateRequest;
 @Service
@@ -22,7 +21,7 @@ public class BasicUserService implements UserService {
     private final UserStatusRepository userStatusRepository;
 
     @Override
-    public User create(UserCreateRequest request) {
+    public User create(UserCreateRequest request, Optional<BinaryContentCreateRequest> profileRequest) {
         User user = new User(request.username(), request.email(), request.password());
         User savedUser = userRepository.save(user);
         UserStatus status = new UserStatus(savedUser.getId());
@@ -37,25 +36,29 @@ savedUser의 id로 new UserStatus로 만들어서 status로 저장하고 userSta
 */
     @Override
     public UserStatusResponse find(UUID userId) {
+        // 유저 정보를 먼저 찾습니다.
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new NoSuchElementException("User not found"));
+
+        //  상태 정보를 찾되, 없으면 에러를 내지 말고 새로 만듭니다!
         UserStatus status = userStatusRepository.findByUserId(userId)
-                .orElseThrow(() -> new NoSuchElementException("User status not found"));
+                .orElseGet(() -> {
+                    // 데이터 구멍을 메워주기 위해 임시 상태 객체를 생성합니다.
+                    return new UserStatus(userId);
+                });
 
         return new UserStatusResponse(
+                user.getId().toString(),
                 user.getUsername(),
                 status.isOnline(),
-                status.getUpdatedAt().toString()
+                status.getUpdatedAt() != null ? status.getUpdatedAt().toString() : "N/A"
         );
     }
-/*매개변수로 userId를 받는다 userRepository.findById메서드에 userId를 매개변수로 입력해서 리턴값으로 반환된 User객체를 user에넣는다
-만약에 반환된 user가 없으면 에러를 던진다 userStatusRepository.findById메서드에 userId를 매개변수로 입력해서 리턴값으로 반환된 UserStatus객체를 status에넣는다
-만약에 반환된 UserStatus가 없으면 에러를 던진다 리턴값으로 new UserStatusResponse객체를 반환한다 UserStatusResponse의 값은 위에서 찾은 user의 이름과
-status의 온라인상태,업데이트 시간이 들어간다
- */
+
     @Override
     public List<UserStatusResponse> findAll() {
         return userRepository.findAll().stream()
+                .limit(2)
                 .map(user -> find(user.getId()))
                 .toList();
     }
@@ -67,7 +70,7 @@ status의 온라인상태,업데이트 시간이 들어간다
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new NoSuchElementException("User not found"));
         user.update(
-                request.name(),
+                request.username(),
                 request.email(),
                 request.password()
         );
@@ -86,8 +89,36 @@ user에 넣는다 반환된 user가 없으면 에러를 던진다. user.update�
         userStatusRepository.deleteByUserId(userId);
         userRepository.deleteById(userId);
     }
+
+    @Override
+    public void updateStatus(UUID userId, boolean online) {
+        // 1. 창고에서 유저를 찾습니다. 없으면 에러를 냅니다.
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new NoSuchElementException("User not found"));
+
+        // 2. online 값에 따라 유저의 상태를 바꿔줍니다.
+        if (online) {
+            user.online();  // 온라인 불 켜기
+        } else {
+            user.offline(); // 온라인 불 끄기
+        }
+
+        // 3. 바뀐 상태를 창고(파일)에 저장합니다!
+        userRepository.save(user);
+    }
+
+    @Override
+    public User login(LoginRequest request) {
+        // 1. 이름으로 유저를 찾습니다. (이름이 틀리면 에러)
+        User user = userRepository.findByUsername(request.username())
+                .orElseThrow(() -> new NoSuchElementException("사용자를 찾을 수 없습니다."));
+
+        // 2. 비밀번호가 일치하는지 확인합니다. (비밀번호가 틀리면 에러)
+        if (!user.getPassword().equals(request.password())) {
+            throw new IllegalArgumentException("비밀번호가 틀렸습니다.");
+        }
+
+        // 3. 통과하면 유저 정보를 돌려줍니다.
+        return user;
+    }
 }
-/* 매개변수로 userid를 받아서 userRepository.existsById메서드로 userId가 있는지 확인하고 없으면 에러를 던진다
-userStatusRepository.deleteByUserId메서드와
-userRepository.deleteById메서드를 통해서 userStatusRepository와  userRepository값을 삭제한다
- */
