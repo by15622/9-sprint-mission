@@ -49,49 +49,30 @@ public class UserController {
             return Optional.of(new BinaryContentCreateRequest(
                     profile.getOriginalFilename(),
                     profile.getContentType(),
-                    profile.getSize(),
-                    profile.getInputStream()
+                    profile.getBytes()
             ));
         } catch (IOException e) {
             throw new RuntimeException("프로필 파일 처리 중 오류 발생", e);
         }
     }
 
-    @RequestMapping(method = RequestMethod.GET) // GET /api/user
-    public List<UserStatusResponse> findAll() {
-        return userService.findAll();
-    }
-
-    @RequestMapping(path = "{userId}", method = RequestMethod.PATCH) // PATCH /api/user/{userId}
-    public User update(
-            @PathVariable UUID userId,
-            @RequestBody UserUpdateRequest request
+    @RequestMapping(
+            path = "/{userId}", // 방 번호 대신 {userId}라는 변수 칸을 만듭니다.
+            method = RequestMethod.PATCH
+    )
+    public ResponseEntity<User> update(
+            @PathVariable UUID userId, // 주소에 담긴 ID를 꺼냅니다.
+            @RequestBody UserUpdateRequest request // 몸통에 담긴 수정 정보를 꺼냅니다.
     ) {
-        return userService.update(userId, request);
+        // 서비스(요리사)에게 일을 시킵니다.
+        User updatedUser = userService.update(userId, request);
+
+        // 200 OK 상태와 함께 결과물을 보냅니다.
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(updatedUser);
     }
 
-    @RequestMapping(path = "/{userId}", method = RequestMethod.GET) // 주소 뒤에 ID를 붙인 GET 요청
-    public UserStatusResponse find(@PathVariable UUID userId) {
-        return userService.find(userId);
-    }
 
-    @RequestMapping(path = "", method = RequestMethod.POST) // 주소: /api/user (POST 방식)
-    public User create(@RequestBody UserCreateRequest request) {
-        return userService.create(request, Optional.empty());
-    }
 
-    @RequestMapping(path = "/{userId}", method = RequestMethod.DELETE)
-    public void delete(@PathVariable UUID userId) {
-        userService.delete(userId);
-    }
-
-    @RequestMapping(path = "/{userId}/status", method = RequestMethod.PATCH)
-    public void updateStatus(@PathVariable UUID userId, @RequestParam boolean online) {
-        userService.updateStatus(userId, online);
-    }
-
-    @RequestMapping(path = "/login", method = RequestMethod.POST)
-    public User login(@RequestBody LoginRequest request) {
-        return userService.login(request);
-    }
 }

@@ -12,16 +12,18 @@ public class BinaryContent {
     private String fileName;
     private String contentType;
     private Long size;
+    private byte[] bytes;
     private UUID userId;
     private UUID messageId;
 
-    public BinaryContent(String fileName, String contentType, Long size) {
+    public BinaryContent(String fileName, String contentType, Long size, byte[] bytes) {
         this.id = UUID.randomUUID();
         this.createdAt = Instant.now();
         this.fileName = fileName;
         this.contentType = contentType;
         this.size = size;
-//      this.userId = userId;
+        this.bytes = bytes;
+
     }
 }
 

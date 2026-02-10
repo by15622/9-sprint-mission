@@ -20,12 +20,13 @@ public class User implements Serializable {
     private Instant lastActiveAt; //
 
 
-    public User(String username, String email, String password) {
+    public User(String username, String email, String password, UUID profileId) {
         this.id = UUID.randomUUID();
         this.createdAt = Instant.now();
         this.username = username;
         this.email = email;
         this.password = password;
+        this.profileId = profileId;
     }
 
     public void online () {
