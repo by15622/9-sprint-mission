@@ -15,6 +15,11 @@ public class FileReadStatusRepository implements ReadStatusRepository {
     private final Map<UUID, ReadStatus> database = new ConcurrentHashMap<>();
 
     @Override
+    public List<ReadStatus> findAllByChannelId(UUID channelId) {
+        return List.of();
+    }
+
+    @Override
     public ReadStatus save(ReadStatus readStatus) {
         database.put(readStatus.getId(), readStatus);
         return readStatus;

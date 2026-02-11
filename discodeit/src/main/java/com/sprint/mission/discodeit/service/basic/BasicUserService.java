@@ -63,7 +63,7 @@ public class BasicUserService implements UserService {
     @Override
     public List<UserStatusResponse> findAll() {
         return userRepository.findAll().stream()
-                .limit(2)
+                //.limit(2)
                 .map(user -> find(user.getId()))
                 .toList();
     }
@@ -91,35 +91,4 @@ public class BasicUserService implements UserService {
         userRepository.deleteById(userId);
     }
 
-    @Override
-    public void updateStatus(UUID userId, boolean online) {
-        // 1. 창고에서 유저를 찾습니다. 없으면 에러를 냅니다.
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new NoSuchElementException("User not found"));
-
-        // 2. online 값에 따라 유저의 상태를 바꿔줍니다.
-        if (online) {
-            user.online();  // 온라인 불 켜기
-        } else {
-            user.offline(); // 온라인 불 끄기
-        }
-
-        // 3. 바뀐 상태를 창고(파일)에 저장합니다!
-        userRepository.save(user);
-    }
-
-//    @Override
-//    public User login(LoginRequest request) {
-//        // 1. 이름으로 유저를 찾습니다. (이름이 틀리면 에러)
-//        User user = userRepository.findByUsername(request.username())
-//                .orElseThrow(() -> new NoSuchElementException("사용자를 찾을 수 없습니다."));
-//
-//        // 2. 비밀번호가 일치하는지 확인합니다. (비밀번호가 틀리면 에러)
-//        if (!user.getPassword().equals(request.password())) {
-//            throw new IllegalArgumentException("비밀번호가 틀렸습니다.");
-//        }
-//
-//        // 3. 통과하면 유저 정보를 돌려줍니다.
-//        return user;
-//    }
 }

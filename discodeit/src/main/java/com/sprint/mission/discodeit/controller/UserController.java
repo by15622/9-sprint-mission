@@ -57,21 +57,44 @@ public class UserController {
     }
 
     @RequestMapping(
-            path = "/{userId}", // 방 번호 대신 {userId}라는 변수 칸을 만듭니다.
+            path = "/{userId}",
             method = RequestMethod.PATCH
     )
     public ResponseEntity<User> update(
-            @PathVariable UUID userId, // 주소에 담긴 ID를 꺼냅니다.
-            @RequestBody UserUpdateRequest request // 몸통에 담긴 수정 정보를 꺼냅니다.
+            @PathVariable UUID userId,
+            @RequestBody UserUpdateRequest request
     ) {
-        // 서비스(요리사)에게 일을 시킵니다.
+
         User updatedUser = userService.update(userId, request);
 
-        // 200 OK 상태와 함께 결과물을 보냅니다.
         return ResponseEntity
                 .status(HttpStatus.OK)
                 .body(updatedUser);
     }
+
+    @RequestMapping(
+            path = "/{userId}",
+            method = RequestMethod.DELETE
+    )
+    public ResponseEntity<Void> delete(@PathVariable UUID userId) {
+        userService.delete(userId);
+        return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
+    }
+
+    @RequestMapping(method = RequestMethod.GET)
+    public ResponseEntity<List<UserStatusResponse>> findAll() {
+        List<UserStatusResponse> users = userService.findAll();
+
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(users);
+    }
+
+
+
+
+
+
 
 
 

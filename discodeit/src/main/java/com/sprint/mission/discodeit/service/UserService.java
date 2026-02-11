@@ -8,7 +8,6 @@ import java.util.Optional;
 import java.util.UUID;
 
 public interface UserService {
-    void updateStatus(UUID userId, boolean online);
     User create(UserCreateRequest request, Optional<BinaryContentCreateRequest> profileRequest);
     UserStatusResponse find(UUID userId);
     List<UserStatusResponse> findAll();
