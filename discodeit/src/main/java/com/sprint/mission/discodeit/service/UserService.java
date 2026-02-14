@@ -13,6 +13,6 @@ public interface UserService {
     List<UserStatusResponse> findAll();
     User update(UUID userId, UserUpdateRequest request);
     void delete(UUID userId);
-    //User login(LoginRequest request);
+
 
 }
