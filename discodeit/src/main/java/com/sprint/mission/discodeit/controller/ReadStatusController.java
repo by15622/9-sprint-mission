@@ -32,4 +32,5 @@ public class ReadStatusController {
     public ResponseEntity<List<ReadStatus>> findAllByUserId(@PathVariable UUID userId) {
         return ResponseEntity.ok(readStatusService.findAllByUserId(userId));
     }
+
 }
