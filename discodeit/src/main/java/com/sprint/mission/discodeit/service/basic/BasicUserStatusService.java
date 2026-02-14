@@ -40,10 +40,8 @@ public class BasicUserStatusService implements UserStatusService {
 
     @Override
     public UserStatusResponse find(UUID userId) {
-        // .orElseThrow 대신 .orElseGet을 사용하여 데이터가 없어도 죽지 않게 만듭니다.
         UserStatus userStatus = userStatusRepository.findByUserId(userId)
                 .orElseGet(() -> {
-                    // 상태가 없으면 온라인 상태가 아닌(false) 새 상태 객체를 임시로 생성합니다.
                     return new UserStatus(userId);
                 });
 
