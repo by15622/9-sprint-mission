@@ -33,10 +33,6 @@ public class BasicUserStatusService implements UserStatusService {
 
         return savedStatus.getId().toString();
     }
-/* 매개변수로 UserStatusCreateRequest를 받아서 만약에 request.userId가 userRepository.existsById 메서드로 못찾았을때
-에러를 반환한다 userRepository.existbyuserId 메서드에 매개변수로 request.userId를 입력해서 상태정보가 존재하는지 확인하고 이미 존재하면 에러 던진다
-
- */
 
     @Override
     public UserStatusResponse find(UUID userId) {
