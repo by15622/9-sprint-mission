@@ -19,5 +19,4 @@ public interface MessageRepository {
   void deleteById(UUID id);
 
   void deleteAllByChannelId(UUID channelId);
-  
 }

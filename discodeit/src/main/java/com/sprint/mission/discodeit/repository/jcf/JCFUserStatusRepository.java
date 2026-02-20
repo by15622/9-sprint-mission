@@ -5,58 +5,54 @@ import com.sprint.mission.discodeit.repository.UserStatusRepository;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Repository;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 
-@Repository
 @ConditionalOnProperty(name = "discodeit.repository.type", havingValue = "jcf", matchIfMissing = true)
+@Repository
 public class JCFUserStatusRepository implements UserStatusRepository {
 
-  private final List<UserStatus> userStatuses = new ArrayList<>();
+  private final Map<UUID, UserStatus> data;
 
-  @Override
-  public Optional<UserStatus> findByUserId(UUID userId) {
-    return userStatuses.stream()
-        .filter(status -> status.getUserId().equals(userId))
-        .findFirst();
+  public JCFUserStatusRepository() {
+    this.data = new HashMap<>();
   }
 
   @Override
   public UserStatus save(UserStatus userStatus) {
-    userStatuses.add(userStatus);
+    this.data.put(userStatus.getId(), userStatus);
     return userStatus;
   }
 
   @Override
   public Optional<UserStatus> findById(UUID id) {
-    return userStatuses.stream()
-        .filter(status -> status.getId() == id)
+    return Optional.ofNullable(this.data.get(id));
+  }
+
+  @Override
+  public Optional<UserStatus> findByUserId(UUID userId) {
+    return this.findAll().stream()
+        .filter(userStatus -> userStatus.getUserId().equals(userId))
         .findFirst();
   }
 
-
   @Override
   public List<UserStatus> findAll() {
-    return new ArrayList<>(userStatuses);
+    return this.data.values().stream().toList();
   }
 
+  @Override
+  public boolean existsById(UUID id) {
+    return this.data.containsKey(id);
+  }
 
   @Override
   public void deleteById(UUID id) {
-    userStatuses.removeIf(userStatus -> userStatus.getUserId().equals(id));
+    this.data.remove(id);
   }
-
 
   @Override
   public void deleteByUserId(UUID userId) {
-    userStatuses.removeIf(status -> status.getUserId().equals(userId));
-  }
-
-  @Override
-  public boolean existsById(UUID id) { // 1. 매개변수 이름을 확인하세요.
-    return userStatuses.stream()
-        .anyMatch(userStatus -> userStatus.getUserId().equals(id)); // 2. 여기도 똑같이 소문자 'id'로 맞추세요.
+    this.findByUserId(userId)
+        .ifPresent(userStatus -> this.deleteByUserId(userStatus.getId()));
   }
 }

@@ -83,7 +83,7 @@ public class FileBinaryContentRepository implements BinaryContentRepository {
     }
     return Optional.ofNullable(binaryContentNullable);
   }
-  
+
   @Override
   public List<BinaryContent> findAllByIdIn(List<UUID> ids) {
     try (Stream<Path> paths = Files.list(DIRECTORY)) {
