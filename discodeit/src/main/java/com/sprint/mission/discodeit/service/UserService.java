@@ -20,7 +20,7 @@ public interface UserService {
 
   List<UserDto> findAll();
 
-  User update(UUID userId, UserUpdateRequest userUpdateRequest,
+  UserDto update(UUID userId, UserUpdateRequest userUpdateRequest,
       Optional<BinaryContentCreateRequest> profileCreateRequest);
 
   void delete(UUID userId);

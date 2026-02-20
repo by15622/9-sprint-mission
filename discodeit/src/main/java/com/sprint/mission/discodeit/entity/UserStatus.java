@@ -14,22 +14,28 @@ public class UserStatus implements Serializable {
   private UUID id;
   private Instant createdAt;
   private Instant updatedAt;
-  //
   private UUID userId;
   private Instant lastActiveAt;
+
+  private Boolean online = false;
 
   public UserStatus(UUID userId, Instant lastActiveAt) {
     this.id = UUID.randomUUID();
     this.createdAt = Instant.now();
-    //
     this.userId = userId;
     this.lastActiveAt = lastActiveAt;
   }
 
-  public void update(Instant lastActiveAt) {
+  public void update(Instant lastActiveAt, Boolean online) {
     boolean anyValueUpdated = false;
+
     if (lastActiveAt != null && !lastActiveAt.equals(this.lastActiveAt)) {
       this.lastActiveAt = lastActiveAt;
+      anyValueUpdated = true;
+    }
+    
+    if (online != null && !online.equals(this.online)) {
+      this.online = online;
       anyValueUpdated = true;
     }
 
@@ -38,9 +44,14 @@ public class UserStatus implements Serializable {
     }
   }
 
-  public Boolean isOnline() {
-    Instant instantFiveMinutesAgo = Instant.now().minus(Duration.ofMinutes(5));
+  public void setOnline(Boolean online) {
+    this.online = online;
+  }
 
-    return lastActiveAt.isAfter(instantFiveMinutesAgo);
+  public Boolean isOnline() {
+    if (lastActiveAt == null) {
+      return this.online;
+    }
+    return this.online;
   }
 }

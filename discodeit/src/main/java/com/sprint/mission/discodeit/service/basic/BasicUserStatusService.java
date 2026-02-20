@@ -51,15 +51,17 @@ public class BasicUserStatusService implements UserStatusService {
   }
 
   @Override
-  public UserStatus update(UUID userStatusId, UserStatusUpdateRequest request) {
-    Instant newLastActiveAt = request.newLastActiveAt();
-
-    UserStatus userStatus = userStatusRepository.findById(userStatusId)
-        .orElseThrow(
-            () -> new NoSuchElementException("UserStatus with id " + userStatusId + " not found"));
-    userStatus.update(newLastActiveAt);
-
-    return userStatusRepository.save(userStatus);
+  public UserStatus update(UUID userId, UserStatusUpdateRequest request) {
+    return userStatusRepository.findByUserId(userId)
+        .map(userStatus -> {
+          userStatus.update(request.newLastActiveAt(), request.online());
+          return userStatusRepository.save(userStatus);
+        })
+        .orElseGet(() -> {
+          UserStatus newStatus = new UserStatus(userId, request.newLastActiveAt());
+          newStatus.setOnline(request.online());
+          return userStatusRepository.save(newStatus);
+        });
   }
 
   @Override
@@ -69,7 +71,7 @@ public class BasicUserStatusService implements UserStatusService {
     UserStatus userStatus = userStatusRepository.findByUserId(userId)
         .orElseThrow(
             () -> new NoSuchElementException("UserStatus with userId " + userId + " not found"));
-    userStatus.update(newLastActiveAt);
+    userStatus.update(newLastActiveAt, request.online());
 
     return userStatusRepository.save(userStatus);
   }

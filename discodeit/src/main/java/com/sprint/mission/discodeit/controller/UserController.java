@@ -50,14 +50,16 @@ public class UserController implements UserApi {
       consumes = {MediaType.MULTIPART_FORM_DATA_VALUE}
   )
   @Override
-  public ResponseEntity<User> update(
+  public ResponseEntity<UserDto> update(
       @PathVariable("userId") UUID userId,
       @RequestPart("userUpdateRequest") UserUpdateRequest userUpdateRequest,
       @RequestPart(value = "profile", required = false) MultipartFile profile
   ) {
     Optional<BinaryContentCreateRequest> profileRequest = Optional.ofNullable(profile)
         .flatMap(this::resolveProfileRequest);
-    User updatedUser = userService.update(userId, userUpdateRequest, profileRequest);
+
+    UserDto updatedUser = userService.update(userId, userUpdateRequest, profileRequest);
+
     return ResponseEntity
         .status(HttpStatus.OK)
         .body(updatedUser);
@@ -81,18 +83,22 @@ public class UserController implements UserApi {
         .body(users);
   }
 
-  @PatchMapping(path = "{userId}/userStatus")
+  @PatchMapping(path = "/{userId}/userStatus") // 경로 앞에 / 추가
   @Override
-  public ResponseEntity<UserStatus> updateUserStatusByUserId(@PathVariable("userId") UUID userId,
-      @RequestBody UserStatusUpdateRequest request) {
-    UserStatus updatedUserStatus = userStatusService.updateByUserId(userId, request);
-    return ResponseEntity
-        .status(HttpStatus.OK)
-        .body(updatedUserStatus);
+  public ResponseEntity<UserStatus> updateUserStatusByUserId(
+      @PathVariable("userId") UUID userId,
+      @RequestBody UserStatusUpdateRequest request
+  ) {
+    UserStatus updatedStatus = userStatusService.update(
+        userId,
+        request
+    );
+
+    return ResponseEntity.ok(updatedStatus);
   }
 
   private Optional<BinaryContentCreateRequest> resolveProfileRequest(MultipartFile profileFile) {
-    if (profileFile.isEmpty()) {
+    if (profileFile == null || profileFile.isEmpty()) {
       return Optional.empty();
     } else {
       try {

@@ -80,7 +80,7 @@ public class BasicUserService implements UserService {
   }
 
   @Override
-  public User update(UUID userId, UserUpdateRequest userUpdateRequest,
+  public UserDto update(UUID userId, UserUpdateRequest userUpdateRequest,
       Optional<BinaryContentCreateRequest> optionalProfileCreateRequest) {
     User user = userRepository.findById(userId)
         .orElseThrow(() -> new NoSuchElementException("User with id " + userId + " not found"));
@@ -111,7 +111,8 @@ public class BasicUserService implements UserService {
     String newPassword = userUpdateRequest.newPassword();
     user.update(newUsername, newEmail, newPassword, nullableProfileId);
 
-    return userRepository.save(user);
+    User savedUser = userRepository.save(user);
+    return toDto(savedUser);
   }
 
   @Override
@@ -127,18 +128,15 @@ public class BasicUserService implements UserService {
   }
 
   private UserDto toDto(User user) {
-    Boolean online = userStatusRepository.findByUserId(user.getId())
-        .map(UserStatus::isOnline)
-        .orElse(null);
+
+    UserStatus status = userStatusRepository.findByUserId(user.getId())
+        .orElseGet(() -> new UserStatus(user.getId(), Instant.now()));
 
     return new UserDto(
         user.getId(),
-        user.getCreatedAt(),
-        user.getUpdatedAt(),
         user.getUsername(),
-        user.getEmail(),
-        user.getProfileId(),
-        online
+        status.isOnline(),
+        status.getLastActiveAt()
     );
   }
 }
