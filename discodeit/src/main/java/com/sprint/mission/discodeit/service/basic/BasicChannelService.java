@@ -23,21 +23,19 @@ import java.util.*;
 public class BasicChannelService implements ChannelService {
 
   private final ChannelRepository channelRepository;
-  //
   private final ReadStatusRepository readStatusRepository;
   private final MessageRepository messageRepository;
 
   @Override
-  public Channel create(PublicChannelCreateRequest request) {
-    String name = request.name();
-    String description = request.description();
-    Channel channel = new Channel(ChannelType.PUBLIC, name, description);
+  public ChannelDto create(PublicChannelCreateRequest request) {
+    Channel channel = new Channel(ChannelType.PUBLIC, request.name(), request.description());
+    Channel savedChannel = channelRepository.save(channel);
 
-    return channelRepository.save(channel);
+    return toDto(savedChannel);
   }
 
   @Override
-  public Channel create(PrivateChannelCreateRequest request) {
+  public ChannelDto create(PrivateChannelCreateRequest request) {
     Channel channel = new Channel(ChannelType.PRIVATE, null, null);
     Channel createdChannel = channelRepository.save(channel);
 
@@ -45,7 +43,7 @@ public class BasicChannelService implements ChannelService {
         .map(userId -> new ReadStatus(userId, createdChannel.getId(), Instant.MIN))
         .forEach(readStatusRepository::save);
 
-    return createdChannel;
+    return toDto(createdChannel); //
   }
 
   @Override
@@ -72,17 +70,19 @@ public class BasicChannelService implements ChannelService {
   }
 
   @Override
-  public Channel update(UUID channelId, PublicChannelUpdateRequest request) {
-    String newName = request.newName();
-    String newDescription = request.newDescription();
+  public ChannelDto update(UUID channelId,
+      PublicChannelUpdateRequest request) {
     Channel channel = channelRepository.findById(channelId)
-        .orElseThrow(
-            () -> new NoSuchElementException("Channel with id " + channelId + " not found"));
+        .orElseThrow(() -> new NoSuchElementException("Channel not found"));
+
     if (channel.getType().equals(ChannelType.PRIVATE)) {
       throw new IllegalArgumentException("Private channel cannot be updated");
     }
-    channel.update(newName, newDescription);
-    return channelRepository.save(channel);
+
+    channel.update(request.newName(), request.newDescription());
+    Channel updatedChannel = channelRepository.save(channel);
+
+    return toDto(updatedChannel);
   }
 
   @Override
