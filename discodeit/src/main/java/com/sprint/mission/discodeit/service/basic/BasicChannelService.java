@@ -79,7 +79,7 @@ public class BasicChannelService implements ChannelService {
       throw new IllegalArgumentException("Private channel cannot be updated");
     }
 
-    channel.update(request.newName(), request.newDescription());
+    channel.update(request.Name(), request.Description());
     Channel updatedChannel = channelRepository.save(channel);
 
     return toDto(updatedChannel);
