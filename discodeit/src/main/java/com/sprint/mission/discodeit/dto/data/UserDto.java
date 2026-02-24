@@ -12,11 +12,15 @@ public record UserDto(
 ) {
 
   public static UserDto from(User user) {
+    boolean isOnline = (user.getUserStatus() != null) && user.getUserStatus().getOnline();
+    Instant lastActive =
+        (user.getUserStatus() != null) ? user.getUserStatus().getLastActiveAt() : Instant.now();
+
     return new UserDto(
         user.getId(),
         user.getUsername(),
-        false,
-        Instant.now()
+        isOnline,
+        lastActive
     );
   }
 }

@@ -77,6 +77,13 @@ public class BasicUserStatusService implements UserStatusService {
   }
 
   @Override
+  public UserStatus findByUserId(UUID userId) {
+    return userStatusRepository.findByUserId(userId)
+        .orElseThrow(() -> new NoSuchElementException(
+            "UserStatus with userId " + userId + " does not exist"));
+  }
+
+  @Override
   public void delete(UUID userStatusId) {
     if (!userStatusRepository.existsById(userStatusId)) {
       throw new NoSuchElementException("UserStatus with id " + userStatusId + " not found");

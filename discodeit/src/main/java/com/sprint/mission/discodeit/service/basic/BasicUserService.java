@@ -11,6 +11,7 @@ import com.sprint.mission.discodeit.repository.BinaryContentRepository;
 import com.sprint.mission.discodeit.repository.UserRepository;
 import com.sprint.mission.discodeit.repository.UserStatusRepository;
 import com.sprint.mission.discodeit.service.UserService;
+import com.sprint.mission.discodeit.service.UserStatusService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -25,9 +26,9 @@ import java.util.UUID;
 public class BasicUserService implements UserService {
 
   private final UserRepository userRepository;
-  //
   private final BinaryContentRepository binaryContentRepository;
   private final UserStatusRepository userStatusRepository;
+  private final UserStatusService userStatusService;
 
   @Override
   public User create(UserCreateRequest userCreateRequest,
@@ -75,7 +76,13 @@ public class BasicUserService implements UserService {
   public List<UserDto> findAll() {
     return userRepository.findAll()
         .stream()
-        .map(this::toDto)
+        .map(user -> {
+          UserStatus status = userStatusService.findByUserId(user.getId());
+
+          user.setUserStatus(status);
+
+          return UserDto.from(user);
+        })
         .toList();
   }
 
