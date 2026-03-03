@@ -27,23 +27,24 @@ public class BasicChannelService implements ChannelService {
   private final MessageRepository messageRepository;
 
   @Override
-  public ChannelDto create(PublicChannelCreateRequest request) {
-    Channel channel = new Channel(ChannelType.PUBLIC, request.name(), request.description());
-    Channel savedChannel = channelRepository.save(channel);
+  public Channel create(PublicChannelCreateRequest request) {
+    String name = request.name();
+    String description = request.description();
+    Channel channel = new Channel(ChannelType.PUBLIC, name, description);
 
-    return toDto(savedChannel);
+    return channelRepository.save(channel);
   }
 
   @Override
-  public ChannelDto create(PrivateChannelCreateRequest request) {
+  public Channel create(PrivateChannelCreateRequest request) {
     Channel channel = new Channel(ChannelType.PRIVATE, null, null);
     Channel createdChannel = channelRepository.save(channel);
 
     request.participantIds().stream()
-        .map(userId -> new ReadStatus(userId, createdChannel.getId(), Instant.MIN))
+        .map(userId -> new ReadStatus(userId, createdChannel.getId(), channel.getCreatedAt()))
         .forEach(readStatusRepository::save);
 
-    return toDto(createdChannel); //
+    return createdChannel;
   }
 
   @Override
@@ -70,19 +71,17 @@ public class BasicChannelService implements ChannelService {
   }
 
   @Override
-  public ChannelDto update(UUID channelId,
-      PublicChannelUpdateRequest request) {
+  public Channel update(UUID channelId, PublicChannelUpdateRequest request) {
+    String newName = request.newName();
+    String newDescription = request.newDescription();
     Channel channel = channelRepository.findById(channelId)
-        .orElseThrow(() -> new NoSuchElementException("Channel not found"));
-
+        .orElseThrow(
+            () -> new NoSuchElementException("Channel with id " + channelId + " not found"));
     if (channel.getType().equals(ChannelType.PRIVATE)) {
       throw new IllegalArgumentException("Private channel cannot be updated");
     }
-
-    channel.update(request.Name(), request.Description());
-    Channel updatedChannel = channelRepository.save(channel);
-
-    return toDto(updatedChannel);
+    channel.update(newName, newDescription);
+    return channelRepository.save(channel);
   }
 
   @Override

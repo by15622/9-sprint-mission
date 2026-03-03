@@ -131,6 +131,4 @@ public class FileMessageRepository implements MessageRepository {
     this.findAllByChannelId(channelId)
         .forEach(message -> this.deleteById(message.getId()));
   }
-
-
 }
