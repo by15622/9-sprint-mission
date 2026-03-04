@@ -1,15 +1,25 @@
 package com.sprint.mission.discodeit.entity;
 
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
+import lombok.AccessLevel;
 import lombok.Getter;
 
 import java.io.Serializable;
 import java.time.Instant;
 import java.util.UUID;
+import lombok.NoArgsConstructor;
 
 @Getter
+@Entity // [핵심] 이 줄이 있어야 레포지토리가 이 클래스를 인식합니다!
+@Table(name = "read_statuses")
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class ReadStatus implements Serializable {
 
   private static final long serialVersionUID = 1L;
+
+  @Id
   private UUID id;
   private Instant createdAt;
   private Instant updatedAt;
