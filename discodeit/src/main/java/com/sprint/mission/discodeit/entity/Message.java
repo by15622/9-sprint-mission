@@ -1,52 +1,47 @@
 package com.sprint.mission.discodeit.entity;
 
+import com.sprint.mission.discodeit.entity.base.BaseUpdatableEntity;
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import lombok.AccessLevel;
 import lombok.Getter;
-
-import java.io.Serializable;
-import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
 import lombok.NoArgsConstructor;
 
-@Getter
-@Entity // [핵심] 이 줄이 있어야 MessageRepository가 작동합니다!
+@Entity
 @Table(name = "messages")
+@Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class Message implements Serializable {
+public class Message extends BaseUpdatableEntity { // 상속 적용
 
-  private static final long serialVersionUID = 1L;
-
-  @Id
-  private UUID id;
-  private Instant createdAt;
-  private Instant updatedAt;
+  @Column(columnDefinition = "TEXT", nullable = false)
   private String content;
-  private UUID channelId;
-  private UUID authorId;
-  private List<UUID> attachmentIds;
 
-  public Message(String content, UUID channelId, UUID authorId, List<UUID> attachmentIds) {
-    this.id = UUID.randomUUID();
-    this.createdAt = Instant.now();
+  // 채널과의 연관관계 (N:1)
+  @ManyToOne(fetch = FetchType.LAZY)
+  @JoinColumn(name = "channel_id", nullable = false)
+  private Channel channel;
+
+  // 작성자와의 연관관계 (N:1)
+  @ManyToOne(fetch = FetchType.LAZY)
+  @JoinColumn(name = "author_id", nullable = false)
+  private User author;
+
+  // 생성자: UUID가 아닌 실제 객체(Channel, User)를 받도록 수정되었습니다.
+  public Message(String content, Channel channel, User author) {
     this.content = content;
-    this.channelId = channelId;
-    this.authorId = authorId;
-    this.attachmentIds = attachmentIds;
+    this.channel = channel;
+    this.author = author;
   }
 
   public void update(String newContent) {
-    boolean anyValueUpdated = false;
     if (newContent != null && !newContent.equals(this.content)) {
       this.content = newContent;
-      anyValueUpdated = true;
-    }
-
-    if (anyValueUpdated) {
-      this.updatedAt = Instant.now();
     }
   }
 }

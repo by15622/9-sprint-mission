@@ -30,14 +30,14 @@ public class BasicChannelService implements ChannelService {
   public Channel create(PublicChannelCreateRequest request) {
     String name = request.name();
     String description = request.description();
-    Channel channel = new Channel(ChannelType.PUBLIC, name, description);
+    Channel channel = new Channel(name, description, ChannelType.PUBLIC);
 
     return channelRepository.save(channel);
   }
 
   @Override
   public Channel create(PrivateChannelCreateRequest request) {
-    Channel channel = new Channel(ChannelType.PRIVATE, null, null);
+    Channel channel = new Channel("비공개 채널", null, ChannelType.PRIVATE);
     Channel createdChannel = channelRepository.save(channel);
 
     request.participantIds().stream()

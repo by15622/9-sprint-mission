@@ -7,12 +7,20 @@ spring:
 
   jpa:
     hibernate:
-      ddl-auto: update # none에서 update로 변경하세요! (새 테이블 자동 생성)
+      ddl-auto: update
     show-sql: true
+    defer-datasource-initialization: true
     properties:
       hibernate:
-        format_sql: true
+        format_sql: true # SQL 로그를 보기 좋게 정렬해주는 설정
         dialect: org.hibernate.dialect.PostgreSQLDialect # 포스트그레 전용 설정 추가
+  sql:
+    init:
+      mode: always
+
+  jackson:
+    serialization:
+      fail-on-empty-beans: false # 가짜 객체(Proxy) 에러를 방지합니다
 
 discodeit:
   storage:
