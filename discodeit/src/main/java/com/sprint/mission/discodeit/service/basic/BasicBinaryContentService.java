@@ -2,7 +2,9 @@ package com.sprint.mission.discodeit.service.basic;
 
 
 import com.sprint.mission.discodeit.dto.BinaryContentCreateRequest;
+import com.sprint.mission.discodeit.dto.data.BinaryContentDto;
 import com.sprint.mission.discodeit.entity.BinaryContent;
+import com.sprint.mission.discodeit.mapper.BinaryContentMapper;
 import com.sprint.mission.discodeit.repository.BinaryContentRepository;
 import com.sprint.mission.discodeit.service.BinaryContentService;
 import lombok.RequiredArgsConstructor;
@@ -12,42 +14,50 @@ import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.UUID;
 
-@RequiredArgsConstructor
 @Service
+@RequiredArgsConstructor
 public class BasicBinaryContentService implements BinaryContentService {
 
   private final BinaryContentRepository binaryContentRepository;
+  private final BinaryContentMapper binaryContentMapper;
 
   @Override
-  public BinaryContent create(BinaryContentCreateRequest request) {
+  public BinaryContentDto create(BinaryContentCreateRequest request) {
     String fileName = request.fileName();
     byte[] bytes = request.bytes();
     String contentType = request.contentType();
+
     BinaryContent binaryContent = new BinaryContent(
         fileName,
         (long) bytes.length,
         contentType
     );
-    return binaryContentRepository.save(binaryContent);
+
+    BinaryContent savedEntity = binaryContentRepository.save(binaryContent);
+    // 매퍼를 통해 DTO로 변환해서 반환합니다.
+    return binaryContentMapper.toDto(savedEntity);
   }
 
   @Override
-  public BinaryContent find(UUID binaryContentId) {
+  public BinaryContentDto find(UUID binaryContentId) {
     return binaryContentRepository.findById(binaryContentId)
+        .map(binaryContentMapper::toDto) // Entity -> Dto 변환
         .orElseThrow(() -> new NoSuchElementException(
             "BinaryContent with id " + binaryContentId + " not found"));
   }
 
   @Override
-  public List<BinaryContent> findAllByIdIn(List<UUID> binaryContentIds) {
+  public List<BinaryContentDto> findAllByIdIn(List<UUID> binaryContentIds) {
     return binaryContentRepository.findAllByIdIn(binaryContentIds).stream()
+        .map(binaryContentMapper::toDto) // 리스트의 각 항목을 Dto로 변환
         .toList();
   }
 
   @Override
   public void delete(UUID binaryContentId) {
     if (!binaryContentRepository.existsById(binaryContentId)) {
-      throw new NoSuchElementException("BinaryContent with id " + binaryContentId + " not found");
+      throw new NoSuchElementException(
+          "BinaryContent with id " + binaryContentId + " not found");
     }
     binaryContentRepository.deleteById(binaryContentId);
   }

@@ -51,13 +51,19 @@ public class BasicUserService implements UserService {
           String fileName = profileRequest.fileName();
           String contentType = profileRequest.contentType();
           byte[] bytes = profileRequest.bytes();
-          BinaryContent binaryContent = new BinaryContent(fileName, (long) bytes.length,
-              contentType);
+
+          BinaryContent binaryContent = new BinaryContent(
+              fileName,
+              (long) bytes.length,
+              contentType
+          );
+
           binaryContentRepository.save(binaryContent);
           binaryContentStorage.put(binaryContent.getId(), bytes);
           return binaryContent;
         })
         .orElse(null);
+
     String password = userCreateRequest.password();
 
     User user = new User(username, email, password, nullableProfile);
@@ -102,12 +108,16 @@ public class BasicUserService implements UserService {
 
     BinaryContent nullableProfile = optionalProfileCreateRequest
         .map(profileRequest -> {
-
           String fileName = profileRequest.fileName();
           String contentType = profileRequest.contentType();
           byte[] bytes = profileRequest.bytes();
-          BinaryContent binaryContent = new BinaryContent(fileName, (long) bytes.length,
-              contentType);
+
+          BinaryContent binaryContent = new BinaryContent(
+              fileName,
+              (long) bytes.length,
+              contentType
+          );
+
           binaryContentRepository.save(binaryContent);
           binaryContentStorage.put(binaryContent.getId(), bytes);
           return binaryContent;
@@ -123,10 +133,23 @@ public class BasicUserService implements UserService {
   @Transactional
   @Override
   public void delete(UUID userId) {
-    if (userRepository.existsById(userId)) {
+    if (!userRepository.existsById(userId)) {
       throw new NoSuchElementException("User with id " + userId + " not found");
     }
 
     userRepository.deleteById(userId);
   }
+
+  private BinaryContent saveProfileFile(BinaryContentCreateRequest request) {
+    BinaryContent binaryContent = new BinaryContent(
+        request.fileName(),
+        (long) request.bytes().length,
+        request.contentType()
+    );
+    binaryContentRepository.save(binaryContent);
+    binaryContentStorage.put(binaryContent.getId(), request.bytes());
+    return binaryContent;
+  }
 }
+
+

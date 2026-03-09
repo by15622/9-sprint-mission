@@ -33,45 +33,34 @@ public class BasicMessageService implements MessageService {
   @Override
   public Message create(MessageCreateRequest messageCreateRequest,
       List<BinaryContentCreateRequest> binaryContentCreateRequests) {
-    UUID channelId = messageCreateRequest.channelId();
-    UUID authorId = messageCreateRequest.authorId();
 
-    if (!channelRepository.existsById(channelId)) {
-      throw new NoSuchElementException("Channel with id " + channelId + " does not exist");
-    }
-    if (!userRepository.existsById(authorId)) {
-      throw new NoSuchElementException("Author with id " + authorId + " does not exist");
-    }
+    // 채널과 작성자 정보 먼저 가져오기
+    Channel channel = channelRepository.findById(messageCreateRequest.channelId())
+        .orElseThrow(() -> new NoSuchElementException("Channel not found"));
+    User author = userRepository.findById(messageCreateRequest.authorId())
+        .orElseThrow(() -> new NoSuchElementException("Author not found"));
 
-    List<UUID> attachmentIds = binaryContentCreateRequests.stream()
-        .map(attachmentRequest -> {
-          String fileName = attachmentRequest.fileName();
-          String contentType = attachmentRequest.contentType();
-          byte[] bytes = attachmentRequest.bytes();
+    // 메시지 객체 먼저 생성
+    Message message = new Message(messageCreateRequest.content(), channel, author);
 
-          BinaryContent binaryContent = new BinaryContent(fileName, (long) bytes.length,
-              contentType);
-          BinaryContent createdBinaryContent = binaryContentRepository.save(binaryContent);
-          binaryContentStorage.put(createdBinaryContent.getId(), bytes);
-          return createdBinaryContent.getId();
-        })
-        .toList();
+    // 첨부파일 처리 및 메시지에 연결
+    binaryContentCreateRequests.forEach(request -> {
+      byte[] bytes = request.bytes();
+      BinaryContent binaryContent = new BinaryContent(
+          request.fileName(),
+          (long) bytes.length,
+          request.contentType()
+      );
 
-    // ID(UUID)를 가지고 실제 엔티티 객체를 찾아옵니다.
-    Channel channel = channelRepository.findById(channelId)
-        .orElseThrow(
-            () -> new NoSuchElementException("Channel with id " + channelId + " does not exist"));
+      // DB 저장
+      BinaryContent savedContent = binaryContentRepository.save(binaryContent);
+      // Storage 저장
+      binaryContentStorage.put(savedContent.getId(), bytes);
 
-    User author = userRepository.findById(authorId)
-        .orElseThrow(
-            () -> new NoSuchElementException("Author with id " + authorId + " does not exist"));
+      // 메시지 엔티티의 리스트에 추가
+      message.getAttachments().add(savedContent);
+    });
 
-    String content = messageCreateRequest.content();
-    Message message = new Message(
-        content,
-        channel,
-        author
-    );
     return messageRepository.save(message);
   }
 
@@ -84,7 +73,7 @@ public class BasicMessageService implements MessageService {
 
   @Override
   public List<Message> findAllByChannelId(UUID channelId) {
-    return messageRepository.findAllByChannelId(channelId).stream()
+    return messageRepository.findAllByChannel_Id(channelId).stream()
         .toList();
   }
 

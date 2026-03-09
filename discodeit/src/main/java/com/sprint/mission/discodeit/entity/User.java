@@ -1,6 +1,6 @@
 package com.sprint.mission.discodeit.entity;
 
-import com.fasterxml.jackson.annotation.JsonManagedReference;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.sprint.mission.discodeit.entity.base.BaseUpdatableEntity;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
@@ -22,14 +22,18 @@ public class User extends BaseUpdatableEntity {
 
   @Column(length = 50, nullable = false, unique = true)
   private String username;
+
   @Column(length = 100, nullable = false, unique = true)
   private String email;
+
   @Column(length = 60, nullable = false)
   private String password;
+
   @OneToOne(cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
   @JoinColumn(name = "profile_id", columnDefinition = "uuid")
   private BinaryContent profile;
-  @com.fasterxml.jackson.annotation.JsonIgnore
+
+  @JsonIgnore
   @Setter
   @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
   private UserStatus status;
@@ -41,19 +45,18 @@ public class User extends BaseUpdatableEntity {
     this.profile = profile;
   }
 
-  public void update(String newUsername, String newEmail, String newPassword,
-      BinaryContent newProfile) {
-    if (newUsername != null && !newUsername.equals(this.username)) {
-      this.username = newUsername;
+  public void update(String username, String email, String password, BinaryContent profile) {
+    if (username != null) {
+      this.username = username;
     }
-    if (newEmail != null && !newEmail.equals(this.email)) {
-      this.email = newEmail;
+    if (email != null) {
+      this.email = email;
     }
-    if (newPassword != null && !newPassword.equals(this.password)) {
-      this.password = newPassword;
+    if (password != null) {
+      this.password = password;
     }
-    if (newProfile != null) {
-      this.profile = newProfile;
+    if (profile != null) {
+      this.profile = profile;
     }
   }
 }

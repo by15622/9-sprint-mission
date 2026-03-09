@@ -33,7 +33,7 @@ public class BasicUserStatusService implements UserStatusService {
 //    if (!userRepository.existsById(userId)) {
 //      throw new NoSuchElementException("User with id " + userId + " does not exist");
 //    }
-    if (userStatusRepository.findByUserId(userId).isPresent()) {
+    if (userStatusRepository.findByUser_Id(userId).isPresent()) {
       throw new IllegalArgumentException("UserStatus with id " + userId + " already exists");
     }
 
@@ -71,7 +71,7 @@ public class BasicUserStatusService implements UserStatusService {
   public UserStatus updateByUserId(UUID userId, UserStatusUpdateRequest request) {
     Instant newLastActiveAt = request.newLastActiveAt();
 
-    UserStatus userStatus = userStatusRepository.findByUserId(userId)
+    UserStatus userStatus = userStatusRepository.findByUser_Id(userId)
         .orElseThrow(
             () -> new NoSuchElementException("UserStatus with userId " + userId + " not found"));
     userStatus.update(newLastActiveAt);

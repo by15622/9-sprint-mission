@@ -1,5 +1,17 @@
 package com.sprint.mission.discodeit.dto.data;
 
-public class MessageDto {
+import java.time.Instant;
+import java.util.List;
+import java.util.UUID;
+
+public record MessageDto(
+    UUID id,
+    Instant createdAt,
+    Instant updatedAt,
+    String content,
+    UUID channelId,
+    UserDto author, // 작성자의 상세 정보
+    List<BinaryContentDto> attachments // 첨부 파일 목록
+) {
 
 }

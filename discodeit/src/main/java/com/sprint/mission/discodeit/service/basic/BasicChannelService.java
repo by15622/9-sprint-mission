@@ -6,11 +6,13 @@ import com.sprint.mission.discodeit.dto.PublicChannelUpdateRequest;
 import com.sprint.mission.discodeit.dto.data.ChannelDto;
 import com.sprint.mission.discodeit.entity.Channel;
 import com.sprint.mission.discodeit.entity.ChannelType;
-import com.sprint.mission.discodeit.entity.Message;
 import com.sprint.mission.discodeit.entity.ReadStatus;
+import com.sprint.mission.discodeit.entity.User;
+import com.sprint.mission.discodeit.mapper.ChannelMapper;
 import com.sprint.mission.discodeit.repository.ChannelRepository;
 import com.sprint.mission.discodeit.repository.MessageRepository;
 import com.sprint.mission.discodeit.repository.ReadStatusRepository;
+import com.sprint.mission.discodeit.repository.UserRepository;
 import com.sprint.mission.discodeit.service.ChannelService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -25,6 +27,8 @@ public class BasicChannelService implements ChannelService {
   private final ChannelRepository channelRepository;
   private final ReadStatusRepository readStatusRepository;
   private final MessageRepository messageRepository;
+  private final UserRepository userRepository;
+  private final ChannelMapper channelMapper;
 
   @Override
   public Channel create(PublicChannelCreateRequest request) {
@@ -41,7 +45,11 @@ public class BasicChannelService implements ChannelService {
     Channel createdChannel = channelRepository.save(channel);
 
     request.participantIds().stream()
-        .map(userId -> new ReadStatus(userId, createdChannel.getId(), channel.getCreatedAt()))
+        .map(userId -> {
+          User user = userRepository.findById(userId)
+              .orElseThrow(() -> new NoSuchElementException("User not found"));
+          return new ReadStatus(user, createdChannel, Instant.now());
+        })
         .forEach(readStatusRepository::save);
 
     return createdChannel;
@@ -57,8 +65,8 @@ public class BasicChannelService implements ChannelService {
 
   @Override
   public List<ChannelDto> findAllByUserId(UUID userId) {
-    List<UUID> mySubscribedChannelIds = readStatusRepository.findAllByUserId(userId).stream()
-        .map(ReadStatus::getChannelId)
+    List<UUID> mySubscribedChannelIds = readStatusRepository.findAllByUser_Id(userId).stream()
+        .map(readStatus -> readStatus.getChannel().getId())
         .toList();
 
     return channelRepository.findAll().stream()
@@ -90,36 +98,19 @@ public class BasicChannelService implements ChannelService {
         .orElseThrow(
             () -> new NoSuchElementException("Channel with id " + channelId + " not found"));
 
-    messageRepository.deleteAllByChannelId(channel.getId());
-    readStatusRepository.deleteAllByChannelId(channel.getId());
+    messageRepository.deleteAllByChannel_Id(channel.getId());
+    readStatusRepository.deleteAllByChannel_Id(channel.getId());
 
     channelRepository.deleteById(channelId);
   }
 
   private ChannelDto toDto(Channel channel) {
-    Instant lastMessageAt = messageRepository.findAllByChannelId(channel.getId())
-        .stream()
-        .sorted(Comparator.comparing(Message::getCreatedAt).reversed())
-        .map(Message::getCreatedAt)
-        .limit(1)
-        .findFirst()
-        .orElse(Instant.MIN);
-
-    List<UUID> participantIds = new ArrayList<>();
-    if (channel.getType().equals(ChannelType.PRIVATE)) {
-      readStatusRepository.findAllByChannelId(channel.getId())
-          .stream()
-          .map(ReadStatus::getUserId)
-          .forEach(participantIds::add);
+    if (channel == null) {
+      return null;
     }
-
-    return new ChannelDto(
-        channel.getId(),
-        channel.getType(),
-        channel.getName(),
-        channel.getDescription(),
-        participantIds,
-        lastMessageAt
-    );
+    // 참여자 리스트 변환, 마지막 메시지 시간 계산 등은
+    // 이미 ChannelMapper가 하도록 우리가 설계했습니다.
+    // 이렇게 바꾸면 List<UUID>와 List<UserDto> 간의 타입 오류가 즉시 해결됩니다.
+    return channelMapper.toDto(channel);
   }
 }
