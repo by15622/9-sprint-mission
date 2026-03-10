@@ -26,9 +26,9 @@ public class LocalBinaryContentStorage implements BinaryContentStorage {
   private final Path root;
 
   public LocalBinaryContentStorage(
-      @Value("${discodeit.storage.local.root-path}") Path root
+      @Value("${discodeit.storage.local.root-path") String rootPath // String으로 받기
   ) {
-    this.root = root;
+    this.root = java.nio.file.Paths.get(rootPath); // Path로 변환
   }
 
   @PostConstruct
@@ -43,17 +43,15 @@ public class LocalBinaryContentStorage implements BinaryContentStorage {
     }
   }
 
+  @Override
   public UUID put(UUID binaryContentId, byte[] bytes) {
     Path filePath = resolvePath(binaryContentId);
-    if (Files.exists(filePath)) {
-      throw new IllegalArgumentException("File with key " + binaryContentId + " already exists");
-    }
-    try (OutputStream outputStream = Files.newOutputStream(filePath)) {
-      outputStream.write(bytes);
+    try {
+      Files.write(filePath, bytes);
+      return binaryContentId;
     } catch (IOException e) {
-      throw new RuntimeException(e);
+      throw new RuntimeException("파일 저장 중 오류 발생", e);
     }
-    return binaryContentId;
   }
 
   public InputStream get(UUID binaryContentId) {

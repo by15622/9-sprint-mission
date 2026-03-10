@@ -7,6 +7,7 @@ import com.sprint.mission.discodeit.entity.BinaryContent;
 import com.sprint.mission.discodeit.mapper.BinaryContentMapper;
 import com.sprint.mission.discodeit.repository.BinaryContentRepository;
 import com.sprint.mission.discodeit.service.BinaryContentService;
+import com.sprint.mission.discodeit.storage.BinaryContentStorage;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -20,20 +21,24 @@ public class BasicBinaryContentService implements BinaryContentService {
 
   private final BinaryContentRepository binaryContentRepository;
   private final BinaryContentMapper binaryContentMapper;
+  private final BinaryContentStorage binaryContentStorage;
+
 
   @Override
   public BinaryContentDto create(BinaryContentCreateRequest request) {
-    String fileName = request.fileName();
-    byte[] bytes = request.bytes();
-    String contentType = request.contentType();
-
+    // DB에 저장할 엔티티 생성
     BinaryContent binaryContent = new BinaryContent(
-        fileName,
-        (long) bytes.length,
-        contentType
+        request.fileName(),
+        (long) request.bytes().length,
+        request.contentType()
     );
 
+    // 먼저 DB(장부)에 파일 정보를 저장합니다.
     BinaryContent savedEntity = binaryContentRepository.save(binaryContent);
+
+    // DB에서 생성된 ID(savedEntity.getId())를 열쇠로 해서 저장합니다.
+    binaryContentStorage.put(savedEntity.getId(), request.bytes());
+
     // 매퍼를 통해 DTO로 변환해서 반환합니다.
     return binaryContentMapper.toDto(savedEntity);
   }

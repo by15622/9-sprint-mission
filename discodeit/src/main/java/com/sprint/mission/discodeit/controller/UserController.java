@@ -6,7 +6,6 @@ import com.sprint.mission.discodeit.dto.UserCreateRequest;
 import com.sprint.mission.discodeit.dto.UserStatusUpdateRequest;
 import com.sprint.mission.discodeit.dto.UserUpdateRequest;
 import com.sprint.mission.discodeit.dto.data.UserDto;
-import com.sprint.mission.discodeit.entity.User;
 import com.sprint.mission.discodeit.entity.UserStatus;
 import com.sprint.mission.discodeit.service.UserService;
 import com.sprint.mission.discodeit.service.UserStatusService;
@@ -34,14 +33,19 @@ public class UserController implements UserApi {
   @PostMapping(consumes = {MediaType.MULTIPART_FORM_DATA_VALUE})
   @Override
   public ResponseEntity<UserDto> create(
-      // 💡 인터페이스와 똑같이 어노테이션 없이 받습니다.
-      UserCreateRequest userCreateRequest,
-      @RequestParam(value = "profile", required = false) MultipartFile profile
+      // 💡 @ModelAttribute 대신 @RequestParam 3개로 찢어서 받습니다.
+      @RequestPart("username") String username,
+      @RequestPart("email") String email,
+      @RequestPart("password") String password,
+      @RequestPart(value = "profile", required = false) MultipartFile profile
   ) {
+    // 1. 낱개로 받은 데이터로 DTO 객체를 직접 만듭니다. (이제 절대 null이 안 뜹니다!)
+    UserCreateRequest userCreateRequest = new UserCreateRequest(username, email, password);
+
+    // 2. 나머지 로직은 그대로 유지하세요.
     Optional<BinaryContentCreateRequest> profileRequest = Optional.ofNullable(profile)
         .flatMap(this::resolveProfileRequest);
 
-    // 💡 이제 userCreateRequest 안에 값이 꽉 차서 들어옵니다!
     UserDto createdUser = userService.create(userCreateRequest, profileRequest);
 
     return ResponseEntity.status(HttpStatus.CREATED).body(createdUser);

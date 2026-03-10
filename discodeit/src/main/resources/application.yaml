@@ -26,4 +26,4 @@ discodeit:
   storage:
     type: local  # "나는 LocalBinaryContentStorage를 쓰겠다"는 선언이에요.
     local:
-      root-path: ./storage  # 파일이 실제로 저장될 폴더 위치예요. (프로젝트 폴더 안에 storage 폴더가 생깁니다)
+      root-path: discodeit/storage  # 파일이 실제로 저장될 폴더 위치예요. (프로젝트 폴더 안에 storage 폴더가 생깁니다)

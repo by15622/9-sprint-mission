@@ -73,15 +73,18 @@ public interface MessageApi {
   ResponseEntity<Void> delete(
       @Parameter(description = "삭제할 Message ID") UUID messageId
   );
-
-  @Operation(summary = "Channel의 Message 목록 조회")
+  
+  @Operation(summary = "Channel의 Message 목록 조회 (페이징)")
   @ApiResponses(value = {
       @ApiResponse(
           responseCode = "200", description = "Message 목록 조회 성공",
-          content = @Content(array = @ArraySchema(schema = @Schema(implementation = Message.class)))
+          // List 대신 PageResponse 클래스를 사용하도록 변경!
+          content = @Content(schema = @Schema(implementation = com.sprint.mission.discodeit.dto.response.PageResponse.class))
       )
   })
-  ResponseEntity<List<Message>> findAllByChannelId(
-      @Parameter(description = "조회할 Channel ID") UUID channelId
+    // 반환 타입을 PageResponse로 바꾸고, int page 파라미터를 추가합니다.
+  ResponseEntity<com.sprint.mission.discodeit.dto.response.PageResponse<Message>> findAllByChannelId(
+      @Parameter(description = "조회할 Channel ID") UUID channelId,
+      @Parameter(description = "페이지 번호 (0부터 시작)") int page
   );
 }

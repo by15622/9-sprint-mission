@@ -19,6 +19,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
@@ -32,9 +33,11 @@ public interface UserApi {
       @ApiResponse(responseCode = "201", description = "성공")
   })
   ResponseEntity<UserDto> create(
-      // 💡 어노테이션을 떼고 객체만 적으세요. 그래야 (query)가 사라집니다!
-      UserCreateRequest userCreateRequest,
-      @RequestParam(value = "profile", required = false) MultipartFile profile
+      @RequestPart("username") String username,
+      @RequestPart("email") String email,
+      @RequestPart("password") String password,
+      
+      @RequestPart(value = "profile", required = false) MultipartFile profile
   );
 
   @Operation(summary = "User 정보 수정")

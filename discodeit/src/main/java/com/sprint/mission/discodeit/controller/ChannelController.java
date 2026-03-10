@@ -5,6 +5,7 @@ import com.sprint.mission.discodeit.dto.PrivateChannelCreateRequest;
 import com.sprint.mission.discodeit.dto.PublicChannelCreateRequest;
 import com.sprint.mission.discodeit.dto.PublicChannelUpdateRequest;
 import com.sprint.mission.discodeit.dto.data.ChannelDto;
+import com.sprint.mission.discodeit.dto.response.PageResponse;
 import com.sprint.mission.discodeit.entity.Channel;
 import com.sprint.mission.discodeit.service.ChannelService;
 import lombok.RequiredArgsConstructor;
@@ -55,9 +56,15 @@ public class ChannelController implements ChannelApi {
         .build();
   }
 
+  @Override
   @GetMapping
-  public ResponseEntity<List<ChannelDto>> findAll(@RequestParam("userId") UUID userId) {
-    List<ChannelDto> channels = channelService.findAllByUserId(userId);
+  public ResponseEntity<PageResponse<ChannelDto>> findAll(
+      @RequestParam("userId") UUID userId,
+      @RequestParam(value = "page", defaultValue = "0") int page // 💡 page 번호를 받도록 추가!
+  ) {
+    // 서비스에서 50개씩 가져오는 페이징 메서드 호출
+    PageResponse<ChannelDto> channels = channelService.findAll(userId, page);
+
     return ResponseEntity
         .status(HttpStatus.OK)
         .body(channels);

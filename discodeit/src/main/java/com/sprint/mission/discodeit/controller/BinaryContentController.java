@@ -3,11 +3,9 @@ package com.sprint.mission.discodeit.controller;
 import com.sprint.mission.discodeit.controller.api.BinaryContentApi;
 import com.sprint.mission.discodeit.dto.data.BinaryContentDto;
 import com.sprint.mission.discodeit.storage.BinaryContentStorage;
-import com.sprint.mission.discodeit.entity.BinaryContent;
 import com.sprint.mission.discodeit.service.BinaryContentService;
-import lombok.RequiredArgsConstructor;
 import org.springframework.core.io.Resource;
-import org.springframework.http.HttpStatus;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -22,12 +20,16 @@ public class BinaryContentController implements BinaryContentApi {
   private final BinaryContentService binaryContentService;
   private final BinaryContentStorage binaryContentStorage;
 
-  @GetMapping("/{id}")
-  public ResponseEntity<?> download(@PathVariable UUID id) {
-    // DB에서 파일 정보(이름, 타입 등)를 가져옵니다.
-    BinaryContentDto metaData = binaryContentService.find(id);
-    
-    return binaryContentStorage.download(metaData);
+  @GetMapping("/{binaryContentId}/download")
+  public ResponseEntity<? extends Resource> download(
+      @PathVariable("binaryContentId") UUID binaryContentId
+  ) {
+    // 1. DB(장부)에서 파일 정보(파일명, 타입 등)를 가져옵니다.
+    BinaryContentDto dto = binaryContentService.find(binaryContentId);
+
+    // 2. 로컬 저장소(하드디스크)에 다운로드 처리를 맡깁니다.
+    // LocalBinaryContentStorage의 download 메서드가 호출됩니다!
+    return binaryContentStorage.download(dto);
   }
 
   /**

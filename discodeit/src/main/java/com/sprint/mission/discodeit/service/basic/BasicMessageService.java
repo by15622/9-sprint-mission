@@ -3,10 +3,12 @@ package com.sprint.mission.discodeit.service.basic;
 import com.sprint.mission.discodeit.dto.BinaryContentCreateRequest;
 import com.sprint.mission.discodeit.dto.MessageCreateRequest;
 import com.sprint.mission.discodeit.dto.MessageUpdateRequest;
+import com.sprint.mission.discodeit.dto.response.PageResponse;
 import com.sprint.mission.discodeit.entity.BinaryContent;
 import com.sprint.mission.discodeit.entity.Message;
 import com.sprint.mission.discodeit.entity.Channel;
 import com.sprint.mission.discodeit.entity.User;
+import com.sprint.mission.discodeit.mapper.PageResponseMapper;
 import com.sprint.mission.discodeit.repository.BinaryContentRepository;
 import com.sprint.mission.discodeit.repository.ChannelRepository;
 import com.sprint.mission.discodeit.repository.MessageRepository;
@@ -14,6 +16,10 @@ import com.sprint.mission.discodeit.repository.UserRepository;
 import com.sprint.mission.discodeit.service.MessageService;
 import com.sprint.mission.discodeit.storage.BinaryContentStorage;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Slice;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -29,6 +35,7 @@ public class BasicMessageService implements MessageService {
   private final UserRepository userRepository;
   private final BinaryContentRepository binaryContentRepository;
   private final BinaryContentStorage binaryContentStorage;
+  private final PageResponseMapper pageResponseMapper;
 
   @Override
   public Message create(MessageCreateRequest messageCreateRequest,
@@ -73,8 +80,16 @@ public class BasicMessageService implements MessageService {
 
   @Override
   public List<Message> findAllByChannelId(UUID channelId) {
-    return messageRepository.findAllByChannel_Id(channelId).stream()
-        .toList();
+    return findAllByChannelId(channelId, 0).getContent();
+  }
+
+  @Override
+  public PageResponse<Message> findAllByChannelId(UUID channelId, int page) {
+    Pageable pageable = PageRequest.of(page, 50, Sort.by("createdAt").descending());
+
+    Slice<Message> messageSlice = messageRepository.findAllByChannel_Id(channelId, pageable);
+
+    return pageResponseMapper.fromSlice(messageSlice);
   }
 
   @Override
