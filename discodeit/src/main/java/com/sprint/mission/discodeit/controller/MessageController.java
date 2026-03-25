@@ -8,6 +8,7 @@ import com.sprint.mission.discodeit.dto.response.PageResponse;
 import com.sprint.mission.discodeit.entity.Message;
 import com.sprint.mission.discodeit.service.MessageService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -20,6 +21,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
+@Slf4j
 @RequiredArgsConstructor
 @RestController
 @RequestMapping("/api/messages")
@@ -32,6 +34,8 @@ public class MessageController implements MessageApi {
       @RequestPart("messageCreateRequest") MessageCreateRequest messageCreateRequest,
       @RequestPart(value = "attachments", required = false) List<MultipartFile> attachments
   ) {
+    log.info("메시지 생성 요청 들어옴! 채널 ID: {}, 작성자 ID: {}", messageCreateRequest.channelId(),
+        messageCreateRequest.authorId());
     List<BinaryContentCreateRequest> attachmentRequests = Optional.ofNullable(attachments)
         .map(files -> files.stream()
             .map(file -> {
@@ -42,6 +46,8 @@ public class MessageController implements MessageApi {
                     file.getBytes()
                 );
               } catch (IOException e) {
+                log.error("메시지 첨부파일을 읽는 중 치명적인 시스템 오류가 발생했습니다! 파일명: {}", file.getOriginalFilename(),
+                    e);
                 throw new RuntimeException(e);
               }
             })
@@ -56,6 +62,7 @@ public class MessageController implements MessageApi {
   @PatchMapping(path = "{messageId}")
   public ResponseEntity<Message> update(@PathVariable("messageId") UUID messageId,
       @RequestBody MessageUpdateRequest request) {
+    log.info("메시지 수정 요청 들어옴! 대상 메시지 ID: {}", messageId);
     Message updatedMessage = messageService.update(messageId, request);
     return ResponseEntity
         .status(HttpStatus.OK)
@@ -64,6 +71,7 @@ public class MessageController implements MessageApi {
 
   @DeleteMapping(path = "{messageId}")
   public ResponseEntity<Void> delete(@PathVariable("messageId") UUID messageId) {
+    log.info("메시지 삭제 요청 들어옴! 대상 메시지 ID: {}", messageId);
     messageService.delete(messageId);
     return ResponseEntity
         .status(HttpStatus.NO_CONTENT)

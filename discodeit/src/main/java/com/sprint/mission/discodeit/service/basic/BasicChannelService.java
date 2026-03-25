@@ -17,6 +17,7 @@ import com.sprint.mission.discodeit.repository.ReadStatusRepository;
 import com.sprint.mission.discodeit.repository.UserRepository;
 import com.sprint.mission.discodeit.service.ChannelService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
@@ -25,6 +26,7 @@ import org.springframework.stereotype.Service;
 import java.time.Instant;
 import java.util.*;
 
+@Slf4j
 @RequiredArgsConstructor
 @Service
 public class BasicChannelService implements ChannelService {
@@ -38,26 +40,33 @@ public class BasicChannelService implements ChannelService {
 
   @Override
   public Channel create(PublicChannelCreateRequest request) {
+    log.info("공개 채널 생성 로직 시작 - 채널명: {}", request.name());
     String name = request.name();
     String description = request.description();
     Channel channel = new Channel(name, description, ChannelType.PUBLIC);
 
+    log.info("공개 채널 생성 및 DB 저장 완료!");
     return channelRepository.save(channel);
   }
 
   @Override
   public Channel create(PrivateChannelCreateRequest request) {
+    log.info("비공개 채널 생성 로직 시작");
     Channel channel = new Channel("비공개 채널", null, ChannelType.PRIVATE);
     Channel createdChannel = channelRepository.save(channel);
 
     request.participantIds().stream()
         .map(userId -> {
           User user = userRepository.findById(userId)
-              .orElseThrow(() -> new NoSuchElementException("User not found"));
+              .orElseThrow(() -> {
+                log.warn("비공개 채널 참여자 연결 실패: 존재하지 않는 유저 ID 입니다. ({})", userId);
+                return new NoSuchElementException("User not found");
+              });
           return new ReadStatus(user, createdChannel, Instant.now());
         })
         .forEach(readStatusRepository::save);
 
+    log.info("비공개 채널 생성 및 참여자 연결 완료!");
     return createdChannel;
   }
 
@@ -82,28 +91,37 @@ public class BasicChannelService implements ChannelService {
 
   @Override
   public Channel update(UUID channelId, PublicChannelUpdateRequest request) {
+    log.info("채널 수정 로직 시작 - 대상 채널 ID: {}", channelId);
     String newName = request.newName();
     String newDescription = request.newDescription();
     Channel channel = channelRepository.findById(channelId)
-        .orElseThrow(
-            () -> new NoSuchElementException("Channel with id " + channelId + " not found"));
+        .orElseThrow(() -> {
+          log.warn("채널 수정 실패: 존재하지 않는 채널 ID 입니다. ({})", channelId);
+          return new NoSuchElementException("Channel with id " + channelId + " not found");
+        });
     if (channel.getType().equals(ChannelType.PRIVATE)) {
+      log.warn("채널 수정 실패: 비공개 채널은 수정할 수 없습니다. 채널 ID: {}", channelId);
       throw new IllegalArgumentException("Private channel cannot be updated");
     }
     channel.update(newName, newDescription);
+    log.info("채널 수정 완료 - 대상 채널 ID: {}", channelId);
     return channelRepository.save(channel);
   }
 
   @Override
   public void delete(UUID channelId) {
+    log.info("채널 삭제 로직 시작 - 대상 채널 ID: {}", channelId);
     Channel channel = channelRepository.findById(channelId)
-        .orElseThrow(
-            () -> new NoSuchElementException("Channel with id " + channelId + " not found"));
+        .orElseThrow(() -> {
+          log.warn("채널 삭제 실패: 존재하지 않는 채널 ID 입니다. ({})", channelId);
+          return new NoSuchElementException("Channel with id " + channelId + " not found");
+        });
 
     messageRepository.deleteAllByChannel_Id(channel.getId());
     readStatusRepository.deleteAllByChannel_Id(channel.getId());
 
     channelRepository.deleteById(channelId);
+    log.info("채널 삭제 완료 (연관된 메시지 및 읽음 상태 포함) - 대상 채널 ID: {}", channelId);
   }
 
   private ChannelDto toDto(Channel channel) {

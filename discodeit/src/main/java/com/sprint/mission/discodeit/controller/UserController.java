@@ -10,6 +10,7 @@ import com.sprint.mission.discodeit.entity.UserStatus;
 import com.sprint.mission.discodeit.service.UserService;
 import com.sprint.mission.discodeit.service.UserStatusService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -21,6 +22,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
+@Slf4j
 @RequiredArgsConstructor
 @RestController
 @CrossOrigin(origins = "*")
@@ -33,16 +35,18 @@ public class UserController implements UserApi {
   @PostMapping(consumes = {MediaType.MULTIPART_FORM_DATA_VALUE})
   @Override
   public ResponseEntity<UserDto> create(
-      // 💡 @ModelAttribute 대신 @RequestParam 3개로 찢어서 받습니다.
+      // @ModelAttribute 대신 @RequestParam 3개로 찢어서 받습니다.
       @RequestPart("username") String username,
       @RequestPart("email") String email,
       @RequestPart("password") String password,
       @RequestPart(value = "profile", required = false) MultipartFile profile
   ) {
-    // 1. 낱개로 받은 데이터로 DTO 객체를 직접 만듭니다. (이제 절대 null이 안 뜹니다!)
+    log.info("새로운 유저 가입 요청 들어옴!! 이름: {}, 이메일: {}", username, email);
+
+    // 낱개로 받은 데이터로 DTO 객체를 직접 만듭니다. (이제 절대 null이 안 뜹니다!)
     UserCreateRequest userCreateRequest = new UserCreateRequest(username, email, password);
 
-    // 2. 나머지 로직은 그대로 유지하세요.
+    // 나머지 로직은 그대로 유지하세요.
     Optional<BinaryContentCreateRequest> profileRequest = Optional.ofNullable(profile)
         .flatMap(this::resolveProfileRequest);
 
@@ -61,6 +65,7 @@ public class UserController implements UserApi {
       @RequestPart("userUpdateRequest") UserUpdateRequest userUpdateRequest,
       @RequestPart(value = "profile", required = false) MultipartFile profile
   ) {
+    log.info("유저 정보 수정 요청 들어옴! 대상 userId: {}", userId);
     Optional<BinaryContentCreateRequest> profileRequest = Optional.ofNullable(profile)
         .flatMap(this::resolveProfileRequest);
     UserDto updatedUser = userService.update(userId, userUpdateRequest, profileRequest);
@@ -72,6 +77,7 @@ public class UserController implements UserApi {
   @DeleteMapping(path = "{userId}")
   @Override
   public ResponseEntity<Void> delete(@PathVariable("userId") UUID userId) {
+    log.info("유저 삭제 요청 들어옴! 대상 userId: {}", userId);
     userService.delete(userId);
     return ResponseEntity
         .status(HttpStatus.NO_CONTENT)
@@ -109,6 +115,7 @@ public class UserController implements UserApi {
         );
         return Optional.of(binaryContentCreateRequest);
       } catch (IOException e) {
+        log.error("프로필 이미지 파일을 읽는 중 치명적인 오류가 발생했습니다!", e);
         throw new RuntimeException(e);
       }
     }

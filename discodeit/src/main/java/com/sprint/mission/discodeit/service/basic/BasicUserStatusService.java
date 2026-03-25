@@ -30,9 +30,6 @@ public class BasicUserStatusService implements UserStatusService {
         .orElseThrow(
             () -> new NoSuchElementException("User with id " + userId + " does not exist"));
 
-//    if (!userRepository.existsById(userId)) {
-//      throw new NoSuchElementException("User with id " + userId + " does not exist");
-//    }
     if (userStatusRepository.findByUser_Id(userId).isPresent()) {
       throw new IllegalArgumentException("UserStatus with id " + userId + " already exists");
     }
