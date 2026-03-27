@@ -120,4 +120,15 @@ public class UserController implements UserApi {
       }
     }
   }
+
+  @GetMapping(path = "{userId}")
+  public ResponseEntity<UserDto> find(@PathVariable("userId") UUID userId) {
+    log.info("유저 단건 조회 요청 들어옴! 대상 userId: {}", userId);
+    // 서비스 계층의 find 메서드를 호출합니다.
+    UserDto userDto = userService.find(userId);
+
+    return ResponseEntity
+        .status(HttpStatus.OK)
+        .body(userDto);
+  }
 }
