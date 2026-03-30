@@ -1,7 +1,9 @@
 package com.sprint.mission.discodeit.exception;
 
+import java.util.Map;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import lombok.extern.slf4j.Slf4j;
@@ -87,6 +89,34 @@ public class GlobalExceptionHandler {
 
     return ResponseEntity
         .status(HttpStatus.INTERNAL_SERVER_ERROR)
+        .body(response);
+  }
+
+  // 유효성 검사 실패 시 발생하는 에러를 낚아채는 핸들러
+  @ExceptionHandler(MethodArgumentNotValidException.class)
+  public ResponseEntity<ErrorResponse> handleValidationException(
+      MethodArgumentNotValidException e) {
+    log.warn("유효성 검사 실패: 잘못된 입력값이 존재합니다.");
+
+    // 어떤 변수(예: email)에서 무슨 에러(예: 이메일 형식이 아닙니다)가 났는지 details 바구니에 담습니다.
+    Map<String, Object> details = new HashMap<>();
+    for (org.springframework.validation.FieldError fieldError : e.getBindingResult()
+        .getFieldErrors()) {
+      details.put(fieldError.getField(), fieldError.getDefaultMessage());
+    }
+
+    // 일관된 ErrorResponse 객체를 생성(초기화)합니다.
+    ErrorResponse response = new ErrorResponse(
+        Instant.now(),
+        "INVALID_INPUT_VALUE",
+        "입력값이 올바르지 않습니다.",
+        details,
+        e.getClass().getSimpleName(),
+        HttpStatus.BAD_REQUEST.value()
+    );
+
+    return ResponseEntity
+        .status(HttpStatus.BAD_REQUEST)
         .body(response);
   }
 }
