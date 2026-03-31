@@ -36,7 +36,6 @@ public class UserController implements UserApi {
   @PostMapping(consumes = {MediaType.MULTIPART_FORM_DATA_VALUE})
   @Override
   public ResponseEntity<UserDto> create(
-      // @ModelAttribute 대신 @RequestParam 3개로 찢어서 받습니다.
       @RequestPart("username") String username,
       @RequestPart("email") String email,
       @RequestPart("password") String password,
@@ -44,10 +43,9 @@ public class UserController implements UserApi {
   ) {
     log.info("새로운 유저 가입 요청 들어옴!! 이름: {}, 이메일: {}", username, email);
 
-    // 낱개로 받은 데이터로 DTO 객체를 직접 만듭니다. (이제 절대 null이 안 뜹니다!)
+    // 낱개로 받은 데이터로 DTO 객체를 직접 만듭니다
     UserCreateRequest userCreateRequest = new UserCreateRequest(username, email, password);
 
-    // 나머지 로직은 그대로 유지하세요.
     Optional<BinaryContentCreateRequest> profileRequest = Optional.ofNullable(profile)
         .flatMap(this::resolveProfileRequest);
 
@@ -125,7 +123,6 @@ public class UserController implements UserApi {
   @GetMapping(path = "{userId}")
   public ResponseEntity<UserDto> find(@PathVariable("userId") UUID userId) {
     log.info("유저 단건 조회 요청 들어옴! 대상 userId: {}", userId);
-    // 서비스 계층의 find 메서드를 호출합니다.
     UserDto userDto = userService.find(userId);
 
     return ResponseEntity
