@@ -39,3 +39,5 @@ out/
 ### 요구사항 ###
 discordit/
 file-data-map/
+.env
+postgres_data/
