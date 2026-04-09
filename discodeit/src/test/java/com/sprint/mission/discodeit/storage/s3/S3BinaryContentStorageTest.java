@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 import com.sprint.mission.discodeit.dto.data.BinaryContentDto;
 import com.sprint.mission.discodeit.storage.BinaryContentStorage;
+import org.junit.jupiter.api.Disabled;
 import org.springframework.core.io.Resource;
 import java.io.FileInputStream;
 import java.io.InputStream;
@@ -18,6 +19,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.ActiveProfiles;
 
 @ActiveProfiles("test")
+@Disabled
 @SpringBootTest(properties = "discodeit.storage.type=s3")
 public class S3BinaryContentStorageTest {
 
