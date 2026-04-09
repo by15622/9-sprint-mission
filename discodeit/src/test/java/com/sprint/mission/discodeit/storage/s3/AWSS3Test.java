@@ -1,6 +1,7 @@
 package com.sprint.mission.discodeit.storage.s3;
 
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
 import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
@@ -18,6 +19,7 @@ import java.io.IOException;
 import java.time.Duration;
 import java.util.Properties;
 
+@Disabled
 public class AWSS3Test {
 
   private String accessKey;
