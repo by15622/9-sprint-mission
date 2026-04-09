@@ -19,9 +19,15 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
 
-      - name: 3. 테스트 실행
+      - name: 3-1. 테스트용 환경 파일 생성 (에러 방지)
         working-directory: ./discodeit
-        run: ./gradlew test
+        run: |
+          touch discodeit.env
+          touch .env
+
+      - name: 3. 테스트 실행 (H2 설정 적용)
+        working-directory: ./discodeit
+        run: ./gradlew test -Dspring.profiles.active=test
 
       - name: 4. 테스트 결과 보고서 업로드 (Codecov)
         uses: codecov/codecov-action@v4
