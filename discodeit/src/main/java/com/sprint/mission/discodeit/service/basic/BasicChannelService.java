@@ -1,0 +1,136 @@
+package com.sprint.mission.discodeit.service.basic;
+
+import com.sprint.mission.discodeit.dto.PrivateChannelCreateRequest;
+import com.sprint.mission.discodeit.dto.PublicChannelCreateRequest;
+import com.sprint.mission.discodeit.dto.PublicChannelUpdateRequest;
+import com.sprint.mission.discodeit.dto.data.ChannelDto;
+import com.sprint.mission.discodeit.dto.response.PageResponse;
+import com.sprint.mission.discodeit.entity.Channel;
+import com.sprint.mission.discodeit.entity.ChannelType;
+import com.sprint.mission.discodeit.entity.ReadStatus;
+import com.sprint.mission.discodeit.entity.User;
+import com.sprint.mission.discodeit.exception.ChannelException;
+import com.sprint.mission.discodeit.exception.ErrorCode;
+import com.sprint.mission.discodeit.exception.UserException;
+import com.sprint.mission.discodeit.mapper.ChannelMapper;
+import com.sprint.mission.discodeit.mapper.PageResponseMapper;
+import com.sprint.mission.discodeit.repository.ChannelRepository;
+import com.sprint.mission.discodeit.repository.MessageRepository;
+import com.sprint.mission.discodeit.repository.ReadStatusRepository;
+import com.sprint.mission.discodeit.repository.UserRepository;
+import com.sprint.mission.discodeit.service.ChannelService;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Slice;
+import org.springframework.stereotype.Service;
+
+import java.time.Instant;
+import java.util.*;
+
+@Slf4j
+@RequiredArgsConstructor
+@Service
+public class BasicChannelService implements ChannelService {
+
+  private final ChannelRepository channelRepository;
+  private final ReadStatusRepository readStatusRepository;
+  private final MessageRepository messageRepository;
+  private final UserRepository userRepository;
+  private final ChannelMapper channelMapper;
+  private final PageResponseMapper pageResponseMapper;
+
+  @Override
+  public Channel create(PublicChannelCreateRequest request) {
+    log.info("공개 채널 생성 로직 시작 - 채널명: {}", request.name());
+    String name = request.name();
+    String description = request.description();
+    Channel channel = new Channel(name, description, ChannelType.PUBLIC);
+
+    log.info("공개 채널 생성 및 DB 저장 완료!");
+    return channelRepository.save(channel);
+  }
+
+  @Override
+  public Channel create(PrivateChannelCreateRequest request) {
+    log.info("비공개 채널 생성 로직 시작");
+    Channel channel = new Channel("비공개 채널", null, ChannelType.PRIVATE);
+    Channel createdChannel = channelRepository.save(channel);
+
+    request.participantIds().stream()
+        .map(userId -> {
+          User user = userRepository.findById(userId)
+              .orElseThrow(() -> {
+                log.warn("비공개 채널 참여자 연결 실패: 존재하지 않는 유저 ID 입니다. ({})", userId);
+                // 유저를 찾을 수 없으므로 UserException 객체를 생성하여 던집니다.
+                return new UserException(ErrorCode.USER_NOT_FOUND, Map.of("userId", userId));
+              });
+          return new ReadStatus(user, createdChannel, Instant.now());
+        })
+        .forEach(readStatusRepository::save);
+
+    log.info("비공개 채널 생성 및 참여자 연결 완료!");
+    return createdChannel;
+  }
+
+  @Override
+  public ChannelDto find(UUID channelId) {
+    return channelRepository.findById(channelId)
+        .map(this::toDto)
+        .orElseThrow(
+            () -> new NoSuchElementException("Channel with id " + channelId + " not found"));
+  }
+
+  @Override
+  public PageResponse<ChannelDto> findAll(UUID userId, int page) {
+    Pageable pageable = PageRequest.of(page, 50);
+
+    Slice<Channel> channelSlice = channelRepository.findAllByUserId(userId, pageable);
+
+    Slice<ChannelDto> dtoSlice = channelSlice.map(channelMapper::toDto);
+
+    return pageResponseMapper.fromSlice(dtoSlice);
+  }
+
+  @Override
+  public Channel update(UUID channelId, PublicChannelUpdateRequest request) {
+    log.info("채널 수정 로직 시작 - 대상 채널 ID: {}", channelId);
+    String newName = request.newName();
+    String newDescription = request.newDescription();
+    Channel channel = channelRepository.findById(channelId)
+        .orElseThrow(() -> {
+          log.warn("채널 수정 실패: 존재하지 않는 채널 ID 입니다. ({})", channelId);
+          return new ChannelException(ErrorCode.CHANNEL_NOT_FOUND, Map.of("channelId", channelId));
+        });
+    if (channel.getType().equals(ChannelType.PRIVATE)) {
+      log.warn("채널 수정 실패: 비공개 채널은 수정할 수 없습니다. 채널 ID: {}", channelId);
+      throw new ChannelException(ErrorCode.PRIVATE_CHANNEL_UPDATE, Map.of("channelId", channelId));
+    }
+    channel.update(newName, newDescription);
+    log.info("채널 수정 완료 - 대상 채널 ID: {}", channelId);
+    return channelRepository.save(channel);
+  }
+
+  @Override
+  public void delete(UUID channelId) {
+    log.info("채널 삭제 로직 시작 - 대상 채널 ID: {}", channelId);
+    Channel channel = channelRepository.findById(channelId)
+        .orElseThrow(() -> {
+          log.warn("채널 삭제 실패: 존재하지 않는 채널 ID 입니다. ({})", channelId);
+          return new ChannelException(ErrorCode.CHANNEL_NOT_FOUND, Map.of("channelId", channelId));
+        });
+
+    messageRepository.deleteAllByChannel_Id(channel.getId());
+    readStatusRepository.deleteAllByChannel_Id(channel.getId());
+    channelRepository.deleteById(channelId);
+    log.info("채널 삭제 완료 (연관된 메시지 및 읽음 상태 포함) - 대상 채널 ID: {}", channelId);
+  }
+
+  private ChannelDto toDto(Channel channel) {
+    if (channel == null) {
+      return null;
+    }
+    return channelMapper.toDto(channel);
+  }
+}
