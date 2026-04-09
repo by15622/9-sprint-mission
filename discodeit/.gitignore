@@ -42,3 +42,5 @@ file-data-map/
 .env
 postgres_data/
 discodeit.env
+.idea/
+.discodeit/
