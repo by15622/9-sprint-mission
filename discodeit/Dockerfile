@@ -1,25 +1,34 @@
-# 1. 베이스 이미지 설정
-FROM amazoncorretto:17
-
-# 2. 작업 디렉토리 설정
+# ==========================================
+# 1단계 (빌드 단계 - builder)
+# ==========================================
+FROM amazoncorretto:17 AS builder
 WORKDIR /app
 
-# 3. 프로젝트 파일 복사 (현재 폴더의 모든 것을 컨테이너의 /app으로 복사)
-COPY .. .
+# 레이어 캐싱
+COPY gradlew .
+COPY gradle gradle
+COPY build.gradle .
+COPY settings.gradle .
 
-# 4. 권한 부여 및 Gradle Wrapper로 애플리케이션 빌드
 RUN chmod +x ./gradlew
-RUN ./gradlew build -x test
+RUN ./gradlew dependencies --no-daemon
 
-# 5. 80 포트 노출
-EXPOSE 80
+# 이제 진짜 소스 코드(src)를 복사하고 빌드합니다.
+COPY src src
+RUN ./gradlew build -x test --no-daemon
 
-# 6. 프로젝트 정보 환경 변수 설정
+# ==========================================
+# 2단계 (런타임 단계)
+# ==========================================
+FROM eclipse-temurin:17-jre-alpine
+WORKDIR /app
+
 ENV PROJECT_NAME=discodeit
 ENV PROJECT_VERSION=1.2-M8
-
-# 7. JVM 옵션 환경 변수 설정 (기본값 빈 문자열)
 ENV JVM_OPTS=""
+EXPOSE 80
 
-# 8. 애플리케이션 실행 명령어 (환경 변수 활용하여 JAR 파일명 추론)
-CMD ["sh", "-c", "java $JVM_OPTS -jar build/libs/${PROJECT_NAME}-${PROJECT_VERSION}.jar"]
+# 1단계(builder)에서 완성된 jar 파일만 빼와서 'app.jar'라는 이름으로 가져옵니다.
+COPY --from=builder /app/build/libs/${PROJECT_NAME}-${PROJECT_VERSION}.jar app.jar
+
+CMD ["sh", "-c", "java $JVM_OPTS -jar app.jar"]
