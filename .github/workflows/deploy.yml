@@ -1,0 +1,47 @@
+name: CD Pipeline
+
+on:
+  push:
+    branches:
+      - release
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 1. 내 코드 가져오기
+        uses: actions/checkout@v4
+
+      - name: 2. AWS ECR 권한 설정 (us-east-1)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_KEY }}
+          aws-region: us-east-1
+
+      - name: 3. Public ECR 로그인
+        uses: aws-actions/amazon-ecr-login@v2
+        with:
+          registry-type: public
+
+      - name: 4. Docker 이미지 빌드 및 푸시
+        working-directory: ./discodeit
+        run: |
+          docker build -t ${{ vars.ECR_REPOSITORY_URI }}:latest .
+          docker push ${{ vars.ECR_REPOSITORY_URI }}:latest
+
+      - name: 5. AWS ECS 권한 설정 (한국 리전)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_KEY }}
+          aws-region: ${{ vars.AWS_REGION }}
+
+      - name: 6. 기존 서버 먼저 끄기 (Desired 0)
+        run: |
+          aws ecs update-service --cluster ${{ vars.ECS_CLUSTER }} --service ${{ vars.ECS_SERVICE }} --desired-count 0
+          aws ecs wait services-stable --cluster ${{ vars.ECS_CLUSTER }} --services ${{ vars.ECS_SERVICE }}
+
+      - name: 7. 새로운 이미지로 서버 다시 켜기 (Update Service)
+        run: |
+          aws ecs update-service --cluster ${{ vars.ECS_CLUSTER }} --service ${{ vars.ECS_SERVICE }} --force-new-deployment --desired-count 1
