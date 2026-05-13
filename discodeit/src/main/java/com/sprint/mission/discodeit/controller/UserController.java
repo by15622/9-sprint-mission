@@ -36,15 +36,10 @@ public class UserController implements UserApi {
   @PostMapping(consumes = {MediaType.MULTIPART_FORM_DATA_VALUE})
   @Override
   public ResponseEntity<UserDto> create(
-      @RequestPart("username") String username,
-      @RequestPart("email") String email,
-      @RequestPart("password") String password,
+      @RequestPart("userCreateRequest") UserCreateRequest userCreateRequest,
       @RequestPart(value = "profile", required = false) MultipartFile profile
   ) {
-    log.info("새로운 유저 가입 요청 들어옴!! 이름: {}, 이메일: {}", username, email);
-
-    // 낱개로 받은 데이터로 DTO 객체를 직접 만듭니다
-    UserCreateRequest userCreateRequest = new UserCreateRequest(username, email, password);
+    log.info("새로운 유저 가입 요청 들어옴!! 이름: {}, 이메일: {}", userCreateRequest.username(), userCreateRequest.email());
 
     Optional<BinaryContentCreateRequest> profileRequest = Optional.ofNullable(profile)
         .flatMap(this::resolveProfileRequest);

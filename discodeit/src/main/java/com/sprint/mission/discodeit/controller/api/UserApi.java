@@ -33,10 +33,7 @@ public interface UserApi {
       @ApiResponse(responseCode = "201", description = "성공")
   })
   ResponseEntity<UserDto> create(
-      @RequestPart("username") String username,
-      @RequestPart("email") String email,
-      @RequestPart("password") String password,
-      
+      @RequestPart("userCreateRequest") UserCreateRequest userCreateRequest,
       @RequestPart(value = "profile", required = false) MultipartFile profile
   );
 

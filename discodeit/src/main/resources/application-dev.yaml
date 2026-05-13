@@ -28,3 +28,4 @@ logging:
     com.sparta.mission.discodeit: debug
     org.hibernate.SQL: debug            # SQL 쿼리문 출력
     org.hibernate.orm.jdbc.bind: trace  # SQL에 들어가는 실제 파라미터 값 출력
+    org.springframework.security: trace
