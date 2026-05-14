@@ -2,6 +2,7 @@ package com.sprint.mission.discodeit.service.basic;
 
 import com.sprint.mission.discodeit.dto.BinaryContentCreateRequest;
 import com.sprint.mission.discodeit.dto.UserCreateRequest;
+import com.sprint.mission.discodeit.dto.UserRoleUpdateRequest;
 import com.sprint.mission.discodeit.dto.UserUpdateRequest;
 import com.sprint.mission.discodeit.dto.data.UserDto;
 import com.sprint.mission.discodeit.entity.BinaryContent;
@@ -178,5 +179,14 @@ public class BasicUserService implements UserService {
     binaryContentRepository.save(binaryContent);
     binaryContentStorage.put(binaryContent.getId(), request.bytes());
     return binaryContent;
+  }
+  @Transactional
+  @Override
+  public UserDto updateRole(UserRoleUpdateRequest request) {
+    User user = userRepository.findById(request.userId())
+        .orElseThrow(() -> new UserNotFoundException(
+            List.of(new ErrorDetail("userId", request.userId().toString()))));
+    user.updateRole(request.newRole());
+    return userMapper.toDto(user);
   }
 }
