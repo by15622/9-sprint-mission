@@ -7,7 +7,6 @@ import com.sprint.mission.discodeit.dto.UserUpdateRequest;
 import com.sprint.mission.discodeit.dto.data.UserDto;
 import com.sprint.mission.discodeit.entity.BinaryContent;
 import com.sprint.mission.discodeit.entity.User;
-import com.sprint.mission.discodeit.entity.UserStatus;
 import com.sprint.mission.discodeit.exception.ErrorCode;
 import com.sprint.mission.discodeit.exception.UserException;
 import com.sprint.mission.discodeit.exception.UserNotFoundException;
@@ -15,15 +14,16 @@ import com.sprint.mission.discodeit.exception.ErrorDetail;
 import com.sprint.mission.discodeit.mapper.UserMapper;
 import com.sprint.mission.discodeit.repository.BinaryContentRepository;
 import com.sprint.mission.discodeit.repository.UserRepository;
-import com.sprint.mission.discodeit.repository.UserStatusRepository;
+import com.sprint.mission.discodeit.security.DiscodeitUserDetails;
 import com.sprint.mission.discodeit.service.UserService;
 import com.sprint.mission.discodeit.storage.BinaryContentStorage;
-import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.session.SessionRegistry;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -34,11 +34,11 @@ import org.springframework.transaction.annotation.Transactional;
 public class BasicUserService implements UserService {
 
   private final UserRepository userRepository;
-  private final UserStatusRepository userStatusRepository;
   private final UserMapper userMapper;
   private final BinaryContentRepository binaryContentRepository;
   private final BinaryContentStorage binaryContentStorage;
   private final PasswordEncoder passwordEncoder;
+  private final SessionRegistry sessionRegistry;
 
   @Transactional
   @Override
@@ -80,10 +80,6 @@ public class BasicUserService implements UserService {
     String password = passwordEncoder.encode(userCreateRequest.password());
 
     User user = new User(username, email, password, nullableProfile);
-    Instant now = Instant.now();
-    UserStatus userStatus = new UserStatus(user, now);
-    user.setStatus(userStatus);
-
     userRepository.save(user);
     log.info("사용자 생성 및 DB 저장 완료 - username: {}", user.getUsername());
     return userMapper.toDto(user);
@@ -107,7 +103,7 @@ public class BasicUserService implements UserService {
         .map(userMapper::toDto)
         .toList();
   }
-
+  @PreAuthorize("principal.userDto.id == #userId")
   @Transactional
   @Override
   public UserDto update(UUID userId, UserUpdateRequest userUpdateRequest,
@@ -157,6 +153,7 @@ public class BasicUserService implements UserService {
     return userMapper.toDto(user);
   }
 
+  @PreAuthorize("principal.userDto.id == #userId")
   @Transactional
   @Override
   public void delete(UUID userId) {
@@ -180,6 +177,7 @@ public class BasicUserService implements UserService {
     binaryContentStorage.put(binaryContent.getId(), request.bytes());
     return binaryContent;
   }
+  @PreAuthorize("hasRole('ADMIN')")
   @Transactional
   @Override
   public UserDto updateRole(UserRoleUpdateRequest request) {
@@ -187,6 +185,14 @@ public class BasicUserService implements UserService {
         .orElseThrow(() -> new UserNotFoundException(
             List.of(new ErrorDetail("userId", request.userId().toString()))));
     user.updateRole(request.newRole());
+    // 권한이 변경된 사용자의 모든 세션을 무효화
+    sessionRegistry.getAllPrincipals().stream()
+        .filter(principal -> principal instanceof DiscodeitUserDetails)
+        .map(principal -> (DiscodeitUserDetails) principal)
+        .filter(userDetails -> userDetails.getUserDto().id().equals(request.userId()))
+        .flatMap(userDetails ->
+            sessionRegistry.getAllSessions(userDetails, false).stream())
+        .forEach(sessionInfo -> sessionInfo.expireNow());
     return userMapper.toDto(user);
   }
 }
