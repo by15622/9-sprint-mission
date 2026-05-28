@@ -7,7 +7,6 @@ import com.sprint.mission.discodeit.exception.ErrorResponse;
 import com.sprint.mission.discodeit.security.DiscodeitUserDetails;
 import com.sprint.mission.discodeit.security.JwtTokenProvider;
 import com.sprint.mission.discodeit.service.UserService;
-import com.sprint.mission.discodeit.service.basic.DiscodeitUserDetailsService;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -19,7 +18,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.web.csrf.CsrfToken;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -36,7 +36,6 @@ public class AuthController {
 
   private final UserService userService;
   private final JwtTokenProvider jwtTokenProvider;
-  private final DiscodeitUserDetailsService userDetailsService;
 
   @GetMapping("csrf-token")
   public ResponseEntity<Void> getCsrfToken(CsrfToken csrfToken) {
@@ -44,9 +43,16 @@ public class AuthController {
     return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
   }
 
-  // GET /auth/me 삭제 (프론트가 브라우저 메모리에서 관리)
+  //  토큰의 캐시된 정보 말고 DB에서 최신 정보 재조회
+  @GetMapping("me")
+  public ResponseEntity<UserDto> me(@AuthenticationPrincipal DiscodeitUserDetails userDetails) {
+    UserDto userDto = userService.find(userDetails.getUserDto().id());
+    return ResponseEntity.ok(userDto);
+  }
 
+  //  Path 설정 대신 어노테이션으로 ADMIN 권한 명시
   @PutMapping
+  @PreAuthorize("hasRole('ADMIN')")
   public ResponseEntity<UserDto> updateRole(@RequestBody UserRoleUpdateRequest request) {
     UserDto userDto = userService.updateRole(request);
     return ResponseEntity.ok(userDto);
@@ -54,7 +60,6 @@ public class AuthController {
 
   @PostMapping("refresh")
   public ResponseEntity<?> refresh(HttpServletRequest request, HttpServletResponse response) {
-    // 1. 쿠키에서 REFRESH_TOKEN 꺼내기
     String refreshToken = null;
     if (request.getCookies() != null) {
       refreshToken = Arrays.stream(request.getCookies())
@@ -64,7 +69,6 @@ public class AuthController {
           .orElse(null);
     }
 
-    // 2. 리프레시 토큰 없거나 유효하지 않으면 401 반환
     if (refreshToken == null || !jwtTokenProvider.validateToken(refreshToken)) {
       return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
           .body(new ErrorResponse(
@@ -77,25 +81,20 @@ public class AuthController {
           ));
     }
 
-    // 3. 토큰에서 유저 정보 꺼내기
     String username = jwtTokenProvider.getUsername(refreshToken);
     UUID userId = jwtTokenProvider.getUserId(refreshToken);
     String role = jwtTokenProvider.getRole(refreshToken);
 
-    // 4. 새 Access Token 발급
     String newAccessToken = jwtTokenProvider.generateAccessToken(userId, username, role);
 
-    // 5. Refresh Token Rotation: 새 Refresh Token도 발급해서 쿠키 교체 (보안 강화)
     String newRefreshToken = jwtTokenProvider.generateRefreshToken(userId, username, role);
     Cookie newRefreshCookie = new Cookie("REFRESH_TOKEN", newRefreshToken);
     newRefreshCookie.setHttpOnly(true);
     newRefreshCookie.setPath("/");
     response.addCookie(newRefreshCookie);
 
-    // 6. UserDto 조회 후 JwtDto로 응답
-    UserDetails userDetails = userDetailsService.loadUserByUsername(username);
-    DiscodeitUserDetails discodeitUserDetails = (DiscodeitUserDetails) userDetails;
-    UserDto userDto = discodeitUserDetails.getUserDto();
+    // DB에서 최신 유저 정보 재조회
+    UserDto userDto = userService.find(userId);
 
     return ResponseEntity.ok(new JwtDto(userDto, newAccessToken));
   }
