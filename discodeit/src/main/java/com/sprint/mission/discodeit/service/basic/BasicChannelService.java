@@ -68,7 +68,7 @@ public class BasicChannelService implements ChannelService {
                 return new UserException(ErrorCode.USER_NOT_FOUND,
                     List.of(new ErrorDetail("userId", userId.toString())));
               });
-          return new ReadStatus(user, createdChannel, Instant.now());
+          return new ReadStatus(user, createdChannel, Instant.now(), true);
         })
         .forEach(readStatusRepository::save);
 

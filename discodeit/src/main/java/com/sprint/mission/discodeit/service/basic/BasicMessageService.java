@@ -5,32 +5,34 @@ import com.sprint.mission.discodeit.dto.MessageCreateRequest;
 import com.sprint.mission.discodeit.dto.MessageUpdateRequest;
 import com.sprint.mission.discodeit.dto.response.PageResponse;
 import com.sprint.mission.discodeit.entity.BinaryContent;
-import com.sprint.mission.discodeit.entity.Message;
 import com.sprint.mission.discodeit.entity.Channel;
+import com.sprint.mission.discodeit.entity.Message;
 import com.sprint.mission.discodeit.entity.User;
+import com.sprint.mission.discodeit.event.BinaryContentCreatedEvent;
+import com.sprint.mission.discodeit.event.MessageCreatedEvent;
 import com.sprint.mission.discodeit.exception.ChannelException;
 import com.sprint.mission.discodeit.exception.ErrorCode;
+import com.sprint.mission.discodeit.exception.ErrorDetail;
 import com.sprint.mission.discodeit.exception.MessageException;
 import com.sprint.mission.discodeit.exception.UserException;
-import com.sprint.mission.discodeit.exception.ErrorDetail;
 import com.sprint.mission.discodeit.mapper.PageResponseMapper;
 import com.sprint.mission.discodeit.repository.BinaryContentRepository;
 import com.sprint.mission.discodeit.repository.ChannelRepository;
 import com.sprint.mission.discodeit.repository.MessageRepository;
 import com.sprint.mission.discodeit.repository.UserRepository;
 import com.sprint.mission.discodeit.service.MessageService;
-import com.sprint.mission.discodeit.storage.BinaryContentStorage;
+import java.util.List;
+import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
 import org.springframework.data.domain.Sort;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
-
-import java.util.List;
-import java.util.UUID;
+import org.springframework.transaction.annotation.Transactional;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -41,9 +43,10 @@ public class BasicMessageService implements MessageService {
   private final ChannelRepository channelRepository;
   private final UserRepository userRepository;
   private final BinaryContentRepository binaryContentRepository;
-  private final BinaryContentStorage binaryContentStorage;
+  private final ApplicationEventPublisher eventPublisher;  // BinaryContentStorage 대신
   private final PageResponseMapper pageResponseMapper;
 
+  @Transactional
   @Override
   public Message create(MessageCreateRequest messageCreateRequest,
       List<BinaryContentCreateRequest> binaryContentCreateRequests) {
@@ -73,13 +76,18 @@ public class BasicMessageService implements MessageService {
           (long) bytes.length,
           request.contentType()
       );
-
       BinaryContent savedContent = binaryContentRepository.save(binaryContent);
-      binaryContentStorage.put(savedContent.getId(), bytes);
+      // storage.put() 대신 이벤트 발행
+      eventPublisher.publishEvent(
+          new BinaryContentCreatedEvent(savedContent.getId(), bytes)
+      );
       message.getAttachments().add(savedContent);
     });
+
+    Message savedMessage = messageRepository.save(message);
+    eventPublisher.publishEvent(new MessageCreatedEvent(savedMessage));
     log.info("메시지 생성 및 파일 처리 완료!");
-    return messageRepository.save(message);
+    return savedMessage;
   }
 
   @Override
@@ -98,9 +106,7 @@ public class BasicMessageService implements MessageService {
   @Override
   public PageResponse<Message> findAllByChannelId(UUID channelId, int page) {
     Pageable pageable = PageRequest.of(page, 50, Sort.by("createdAt").descending());
-
     Slice<Message> messageSlice = messageRepository.findAllByChannel_Id(channelId, pageable);
-
     return pageResponseMapper.fromSlice(messageSlice);
   }
 
@@ -124,12 +130,11 @@ public class BasicMessageService implements MessageService {
   @Override
   public void delete(UUID messageId) {
     log.info("메시지 삭제 로직 시작 - 대상 메시지 ID: {}", messageId);
-    Message message = messageRepository.findById(messageId)
+    messageRepository.findById(messageId)
         .orElseThrow(() -> {
           log.warn("메시지 삭제 실패: 존재하지 않는 메시지 ID 입니다. ({})", messageId);
           return new MessageException(ErrorCode.MESSAGE_NOT_FOUND, messageId.toString());
         });
-
     messageRepository.deleteById(messageId);
     log.info("메시지 삭제 완료 - 대상 메시지 ID: {}", messageId);
   }

@@ -68,7 +68,7 @@ public class SecurityConfig {
             "/", "/index.html", "/assets/**", "/favicon.ico",
             "/api/auth/csrf-token", "/api/auth/login",
             "/api/auth/logout", "/api/auth/refresh",
-            "/swagger-ui/**", "/actuator/**"
+            "/swagger-ui/**", "/actuator/**", "/v3/api-docs/**"
         ).permitAll()
         .anyRequest().authenticated();
   }
