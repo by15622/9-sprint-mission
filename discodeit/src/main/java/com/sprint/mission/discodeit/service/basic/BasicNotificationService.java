@@ -10,6 +10,7 @@ import java.util.NoSuchElementException;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -20,6 +21,7 @@ public class BasicNotificationService implements NotificationService {
 
   private final NotificationRepository notificationRepository;
 
+  @Cacheable(value = "notifications", key = "#receiverId")
   @Transactional
   @Override
   public NotificationDto create(User receiver, String title, String content) {
@@ -29,6 +31,7 @@ public class BasicNotificationService implements NotificationService {
     return toDto(saved);
   }
 
+  @Cacheable(value = "notifications", key = "#receiverId")
   @Transactional(readOnly = true)
   @Override
   public List<NotificationDto> findAllByReceiverId(UUID receiverId) {
@@ -38,6 +41,7 @@ public class BasicNotificationService implements NotificationService {
         .toList();
   }
 
+  @Cacheable(value = "notifications", key = "#receiverId")
   @Transactional
   @Override
   public void delete(UUID notificationId, UUID requestUserId) {
