@@ -57,6 +57,7 @@ public class SecurityConfig {
   }
 
   private void configureCsrf(CsrfConfigurer<HttpSecurity> csrf) {
+    // csrf.disable(); 포스트맨 테스트용으로 써둔거
     csrf.csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
         .csrfTokenRequestHandler(new SpaCsrfTokenRequestHandler());
   }

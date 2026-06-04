@@ -3,6 +3,7 @@ package com.sprint.mission.discodeit.service.basic;
 import com.sprint.mission.discodeit.dto.BinaryContentCreateRequest;
 import com.sprint.mission.discodeit.dto.MessageCreateRequest;
 import com.sprint.mission.discodeit.dto.MessageUpdateRequest;
+import com.sprint.mission.discodeit.dto.data.MessageDto;
 import com.sprint.mission.discodeit.dto.response.PageResponse;
 import com.sprint.mission.discodeit.entity.BinaryContent;
 import com.sprint.mission.discodeit.entity.Channel;
@@ -15,6 +16,7 @@ import com.sprint.mission.discodeit.exception.ErrorCode;
 import com.sprint.mission.discodeit.exception.ErrorDetail;
 import com.sprint.mission.discodeit.exception.MessageException;
 import com.sprint.mission.discodeit.exception.UserException;
+import com.sprint.mission.discodeit.mapper.MessageMapper;
 import com.sprint.mission.discodeit.mapper.PageResponseMapper;
 import com.sprint.mission.discodeit.repository.BinaryContentRepository;
 import com.sprint.mission.discodeit.repository.ChannelRepository;
@@ -43,12 +45,13 @@ public class BasicMessageService implements MessageService {
   private final ChannelRepository channelRepository;
   private final UserRepository userRepository;
   private final BinaryContentRepository binaryContentRepository;
-  private final ApplicationEventPublisher eventPublisher;  // BinaryContentStorage 대신
+  private final ApplicationEventPublisher eventPublisher;
   private final PageResponseMapper pageResponseMapper;
+  private final MessageMapper messageMapper;
 
   @Transactional
   @Override
-  public Message create(MessageCreateRequest messageCreateRequest,
+  public MessageDto create(MessageCreateRequest messageCreateRequest,
       List<BinaryContentCreateRequest> binaryContentCreateRequests) {
     log.info("메시지 생성 로직 시작 - 채널 ID: {}, 작성자 ID: {}", messageCreateRequest.channelId(),
         messageCreateRequest.authorId());
@@ -77,7 +80,6 @@ public class BasicMessageService implements MessageService {
           request.contentType()
       );
       BinaryContent savedContent = binaryContentRepository.save(binaryContent);
-      // storage.put() 대신 이벤트 발행
       eventPublisher.publishEvent(
           new BinaryContentCreatedEvent(savedContent.getId(), bytes)
       );
@@ -87,43 +89,41 @@ public class BasicMessageService implements MessageService {
     Message savedMessage = messageRepository.save(message);
     eventPublisher.publishEvent(new MessageCreatedEvent(savedMessage));
     log.info("메시지 생성 및 파일 처리 완료!");
-    return savedMessage;
+    return messageMapper.toDto(savedMessage);
   }
 
   @Override
-  public Message find(UUID messageId) {
-    return messageRepository.findById(messageId)
+  public MessageDto find(UUID messageId) {
+    return messageMapper.toDto(messageRepository.findById(messageId)
         .orElseThrow(() ->
             new MessageException(ErrorCode.MESSAGE_NOT_FOUND, messageId.toString())
-        );
+        ));
   }
 
   @Override
-  public List<Message> findAllByChannelId(UUID channelId) {
+  public List<MessageDto> findAllByChannelId(UUID channelId) {
     return findAllByChannelId(channelId, 0).getContent();
   }
 
   @Override
-  public PageResponse<Message> findAllByChannelId(UUID channelId, int page) {
+  public PageResponse<MessageDto> findAllByChannelId(UUID channelId, int page) {
     Pageable pageable = PageRequest.of(page, 50, Sort.by("createdAt").descending());
     Slice<Message> messageSlice = messageRepository.findAllByChannel_Id(channelId, pageable);
-    return pageResponseMapper.fromSlice(messageSlice);
+    return pageResponseMapper.fromSlice(messageSlice.map(messageMapper::toDto));
   }
 
   @PreAuthorize("@messageSecurity.isAuthor(#messageId, principal.userDto.id)")
   @Override
-  public Message update(UUID messageId, MessageUpdateRequest request) {
+  public MessageDto update(UUID messageId, MessageUpdateRequest request) {
     log.info("메시지 수정 로직 시작 - 대상 메시지 ID: {}", messageId);
-    String newContent = request.newContent();
     Message message = messageRepository.findById(messageId)
         .orElseThrow(() -> {
           log.warn("메시지 수정 실패: 존재하지 않는 메시지 ID 입니다. ({})", messageId);
           return new MessageException(ErrorCode.MESSAGE_NOT_FOUND, messageId.toString());
         });
-
-    message.update(newContent);
+    message.update(request.newContent());
     log.info("메시지 수정 완료 - 대상 메시지 ID: {}", messageId);
-    return messageRepository.save(message);
+    return messageMapper.toDto(messageRepository.save(message));
   }
 
   @PreAuthorize("@messageSecurity.isAuthor(#messageId, principal.userDto.id)")
