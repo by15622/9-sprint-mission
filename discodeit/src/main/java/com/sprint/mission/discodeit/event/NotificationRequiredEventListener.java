@@ -1,5 +1,6 @@
 package com.sprint.mission.discodeit.event;
 
+import com.sprint.mission.discodeit.dto.data.MessageDto;
 import com.sprint.mission.discodeit.entity.ReadStatus;
 import com.sprint.mission.discodeit.entity.User;
 import com.sprint.mission.discodeit.repository.ReadStatusRepository;
@@ -8,11 +9,10 @@ import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Async;
-import org.springframework.stereotype.Component;
 import org.springframework.transaction.event.TransactionalEventListener;
 
 @Slf4j
-@Component
+//@Component
 @RequiredArgsConstructor
 public class NotificationRequiredEventListener {
 
@@ -22,19 +22,16 @@ public class NotificationRequiredEventListener {
   @Async
   @TransactionalEventListener
   public void on(MessageCreatedEvent event) {
-    var message = event.message();
-    var channel = message.getChannel();
-    var sender = message.getAuthor();
+    MessageDto message = event.message();
 
-    String title = sender.getUsername() + " (#" + channel.getName() + ")";
-    String content = message.getContent();
+    String title = message.author().username() + " (#" + message.channelId() + ")";
+    String content = message.content();
 
-    // 해당 채널에서 알림을 켜놓은 ReadStatus 목록 조회
     List<ReadStatus> notifyTargets = readStatusRepository
-        .findAllByChannel_Id(channel.getId())
+        .findAllByChannel_Id(message.channelId())
         .stream()
-        .filter(ReadStatus::isNotificationEnabled)   // 알림 켠 사람만
-        .filter(rs -> !rs.getUser().getId().equals(sender.getId()))  // 보낸 사람 제외
+        .filter(ReadStatus::isNotificationEnabled)
+        .filter(rs -> !rs.getUser().getId().equals(message.author().id()))
         .toList();
 
     notifyTargets.forEach(rs -> {

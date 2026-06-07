@@ -87,7 +87,7 @@ public class BasicMessageService implements MessageService {
     });
 
     Message savedMessage = messageRepository.save(message);
-    eventPublisher.publishEvent(new MessageCreatedEvent(savedMessage));
+    eventPublisher.publishEvent(new MessageCreatedEvent(messageMapper.toDto(savedMessage)));
     log.info("메시지 생성 및 파일 처리 완료!");
     return messageMapper.toDto(savedMessage);
   }

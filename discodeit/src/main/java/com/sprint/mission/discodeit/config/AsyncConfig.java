@@ -16,39 +16,47 @@ import org.springframework.core.task.TaskExecutor;
 @EnableRetry
 @EnableCaching
 @Configuration
-@EnableAsync  // 비동기 기능 켜기
+@EnableAsync
 public class AsyncConfig {
 
   @Bean
   public TaskExecutor taskExecutor() {
     ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
-    executor.setCorePoolSize(10);     // 기본 스레드 수
-    executor.setMaxPoolSize(20);      // 최대 스레드 수
-    executor.setQueueCapacity(100);   // 대기열 크기
-    executor.setThreadNamePrefix("async-");  // 스레드 이름 앞에 붙을 문자
-    executor.setTaskDecorator(taskDecorator());  // 아래에서 만든 데코레이터 적용
+    executor.setCorePoolSize(10);
+    executor.setMaxPoolSize(20);
+    executor.setQueueCapacity(100);
+    executor.setThreadNamePrefix("async-");
+    executor.setTaskDecorator(taskDecorator());
     executor.initialize();
     return executor;
   }
 
-  // MDC와 SecurityContext를 비동기 스레드에도 전달하는 역할
+  @Bean
+  public TaskExecutor eventTaskExecutor() {
+    ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
+    executor.setCorePoolSize(10);
+    executor.setMaxPoolSize(20);
+    executor.setQueueCapacity(100);
+    executor.setThreadNamePrefix("event-async-");
+    executor.setTaskDecorator(taskDecorator());
+    executor.initialize();
+    return executor;
+  }
+
   @Bean
   public TaskDecorator taskDecorator() {
     return runnable -> {
-      // 현재(메인) 스레드의 정보를 미리 복사해둠
       Map<String, String> mdcContext = MDC.getCopyOfContextMap();
       SecurityContext securityContext = SecurityContextHolder.getContext();
 
       return () -> {
         try {
-          // 비동기 스레드에 복사해둔 정보 붙여넣기
           if (mdcContext != null) {
             MDC.setContextMap(mdcContext);
           }
           SecurityContextHolder.setContext(securityContext);
-          runnable.run();  // 실제 비동기 작업 실행
+          runnable.run();
         } finally {
-          // 작업 끝나면 정리
           MDC.clear();
           SecurityContextHolder.clearContext();
         }
