@@ -3,12 +3,18 @@ spring:
     active: dev
 
   cache:
-    type: caffeine
-    caffeine:
-      spec: >
-        maximumSize=100,
-        expireAfterAccess=600s,
-        recordStats
+    type: redis
+    cache-names:
+      - channels
+      - notifications
+      - users
+    redis:
+      enable-statistics: true
+
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
 
   datasource:
     url: jdbc:postgresql://discodeit-db.cbs408wm2q1p.ap-northeast-2.rds.amazonaws.com:5432/discodeit
