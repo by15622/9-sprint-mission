@@ -41,7 +41,7 @@ public class NotificationRequiredEventListener {
     notifyTargets.forEach(rs -> {
       User receiver = rs.getUser();
       NotificationDto notification = notificationService.create(receiver, title, content);
-      sseService.send(List.of(receiver.getId()), "notifications", notification);
+      sseService.send(List.of(receiver.getId()), "notifications.created", notification);
       log.info("알림 생성 - 수신자: {}", receiver.getUsername());
     });
   }

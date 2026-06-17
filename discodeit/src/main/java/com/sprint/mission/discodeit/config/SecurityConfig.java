@@ -66,6 +66,8 @@ public class SecurityConfig {
     auth.requestMatchers("/", "/index.html", "/assets/**", "/favicon.ico").permitAll() // 정적 리소스
         .requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll() // Swagger
         .requestMatchers("/actuator/**").permitAll() // Actuator
+        .requestMatchers("POST", "/api/users").permitAll()
+        .requestMatchers("/api/auth/csrf-token", "/api/auth/refresh").permitAll()
         .anyRequest().authenticated();
   }
 

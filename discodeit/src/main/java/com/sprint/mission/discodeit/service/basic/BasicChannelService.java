@@ -20,6 +20,7 @@ import com.sprint.mission.discodeit.repository.MessageRepository;
 import com.sprint.mission.discodeit.repository.ReadStatusRepository;
 import com.sprint.mission.discodeit.repository.UserRepository;
 import com.sprint.mission.discodeit.service.ChannelService;
+import com.sprint.mission.discodeit.service.SseService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.CacheEvict;
@@ -43,6 +44,7 @@ public class BasicChannelService implements ChannelService {
   private final UserRepository userRepository;
   private final ChannelMapper channelMapper;
   private final PageResponseMapper pageResponseMapper;
+  private final SseService sseService;
 
   @CacheEvict(value = "channels", allEntries = true)
   @PreAuthorize("hasRole('CHANNEL_MANAGER')")
@@ -53,8 +55,10 @@ public class BasicChannelService implements ChannelService {
     String description = request.description();
     Channel channel = new Channel(name, description, ChannelType.PUBLIC);
 
+    Channel saved = channelRepository.save(channel);
+    sseService.broadcast("channels.created", toDto(saved));
     log.info("공개 채널 생성 및 DB 저장 완료!");
-    return channelRepository.save(channel);
+    return saved;
   }
 
   @CacheEvict(value = "channels", allEntries = true)
@@ -76,6 +80,7 @@ public class BasicChannelService implements ChannelService {
         })
         .forEach(readStatusRepository::save);
 
+    sseService.send(request.participantIds(), "channels.created", toDto(createdChannel));
     log.info("비공개 채널 생성 및 참여자 연결 완료!");
     return createdChannel;
   }
@@ -117,8 +122,10 @@ public class BasicChannelService implements ChannelService {
       throw new ChannelException(ErrorCode.PRIVATE_CHANNEL_UPDATE, channelId.toString());
     }
     channel.update(newName, newDescription);
+    Channel saved = channelRepository.save(channel);
+    sseService.broadcast("channels.updated", toDto(saved));
     log.info("채널 수정 완료 - 대상 채널 ID: {}", channelId);
-    return channelRepository.save(channel);
+    return saved;
   }
 
   @CacheEvict(value = "channels", allEntries = true)
@@ -132,9 +139,12 @@ public class BasicChannelService implements ChannelService {
           return new ChannelException(ErrorCode.CHANNEL_NOT_FOUND, channelId.toString());
         });
 
+    ChannelDto deletedDto = toDto(channel);
+
     messageRepository.deleteAllByChannel_Id(channel.getId());
     readStatusRepository.deleteAllByChannel_Id(channel.getId());
     channelRepository.deleteById(channelId);
+    sseService.broadcast("channels.deleted", deletedDto);
     log.info("채널 삭제 완료 (연관된 메시지 및 읽음 상태 포함) - 대상 채널 ID: {}", channelId);
   }
 
