@@ -49,21 +49,22 @@ public class BasicChannelService implements ChannelService {
   @CacheEvict(value = "channels", allEntries = true)
   @PreAuthorize("hasRole('CHANNEL_MANAGER')")
   @Override
-  public Channel create(PublicChannelCreateRequest request) {
+  public ChannelDto create(PublicChannelCreateRequest request) {
     log.info("공개 채널 생성 로직 시작 - 채널명: {}", request.name());
     String name = request.name();
     String description = request.description();
     Channel channel = new Channel(name, description, ChannelType.PUBLIC);
 
     Channel saved = channelRepository.save(channel);
-    sseService.broadcast("channels.created", toDto(saved));
+    ChannelDto dto = toDto(saved);
+    sseService.broadcast("channels.created", dto);
     log.info("공개 채널 생성 및 DB 저장 완료!");
-    return saved;
+    return dto;
   }
 
   @CacheEvict(value = "channels", allEntries = true)
   @Override
-  public Channel create(PrivateChannelCreateRequest request) {
+  public ChannelDto create(PrivateChannelCreateRequest request) {
     log.info("비공개 채널 생성 로직 시작");
     Channel channel = new Channel("비공개 채널", null, ChannelType.PRIVATE);
     Channel createdChannel = channelRepository.save(channel);
@@ -80,9 +81,10 @@ public class BasicChannelService implements ChannelService {
         })
         .forEach(readStatusRepository::save);
 
-    sseService.send(request.participantIds(), "channels.created", toDto(createdChannel));
+    ChannelDto dto = toDto(createdChannel);
+    sseService.send(request.participantIds(), "channels.created", dto);
     log.info("비공개 채널 생성 및 참여자 연결 완료!");
-    return createdChannel;
+    return dto;
   }
 
   @Override
@@ -108,7 +110,7 @@ public class BasicChannelService implements ChannelService {
   @CacheEvict(value = "channels", allEntries = true)
   @PreAuthorize("hasRole('CHANNEL_MANAGER')")
   @Override
-  public Channel update(UUID channelId, PublicChannelUpdateRequest request) {
+  public ChannelDto update(UUID channelId, PublicChannelUpdateRequest request) {
     log.info("채널 수정 로직 시작 - 대상 채널 ID: {}", channelId);
     String newName = request.newName();
     String newDescription = request.newDescription();
@@ -123,9 +125,10 @@ public class BasicChannelService implements ChannelService {
     }
     channel.update(newName, newDescription);
     Channel saved = channelRepository.save(channel);
-    sseService.broadcast("channels.updated", toDto(saved));
+    ChannelDto dto = toDto(saved);
+    sseService.broadcast("channels.updated", dto);
     log.info("채널 수정 완료 - 대상 채널 ID: {}", channelId);
-    return saved;
+    return dto;
   }
 
   @CacheEvict(value = "channels", allEntries = true)
