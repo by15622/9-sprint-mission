@@ -16,7 +16,8 @@ services:
     build:
       context: ./discodeit
       dockerfile: Dockerfile
-    container_name: discodeit-backend
+    deploy:
+      replicas: 3
     env_file: ./discodeit/.env
     depends_on:
       - db
